@@ -1,155 +1,143 @@
 <script setup>
+// src/views/AdminCategoriasView.vue
 import { ref, onMounted } from 'vue'
-import { supabase } from '../supabase'
-import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { getCategories, createCategory, updateCategory, deleteCategory } from '@/services/categoryService'
+import { useToast } from 'vue-toastification' // <-- 1. IMPORTACIÓN AÑADIDA
+import ConfirmModal from '@/components/ConfirmModal.vue'
+import EditCategoryModal from '@/components/EditCategoryModal.vue' // <-- NUEVO
+import EmptyState from '@/components/EmptyState.vue'
+import CustomButton from '@/components/CustomButton.vue'
+import CategoryListItem from '@/components/CategoryListItem.vue'
+import { PlusIcon, TagIcon } from '@heroicons/vue/24/outline'
+import SkeletonLoader from '@/components/SkeletonLoader.vue';
 
-// --- ESTADO REACTIVO ---
+const toast = useToast()
 const categorias = ref([])
 const nuevaCategoriaNombre = ref('')
 const cargando = ref(false)
-const errorMsg = ref('')
 
-// --- LÓGICA ---
+// --- NUEVOS REFS PARA EL MODAL ---
+const showConfirmModal = ref(false)
+const categoryToDelete = ref(null)
 
-// 1. Función para OBTENER todas las categorías
+// --- NUEVO ESTADO PARA EL MODAL DE EDICIÓN ---
+const showEditModal = ref(false)
+const categoryToEdit = ref(null)
+
+// --- Lógica de la vista (sin cambios) ---
 async function obtenerCategorias() {
+  cargando.value = true
   try {
-    cargando.value = true
-    errorMsg.value = ''
-    const { data, error } = await supabase
-      .from('categorias')
-      .select('*')
-      .order('nombre', { ascending: true })
-
-    if (error) throw error
-
-    categorias.value = data
+    categorias.value = await getCategories()
   } catch (error) {
-    console.error('Error al obtener categorías:', error.message)
-    errorMsg.value = 'No se pudieron cargar las categorías.'
+    toast.error('Hubo un error al obtener las categorías.')
   } finally {
     cargando.value = false
   }
 }
 
-// 2. Función para AÑADIR una nueva categoría
 async function agregarCategoria() {
-  if (nuevaCategoriaNombre.value.trim() === '') {
-    alert('Por favor, escribe un nombre para la categoría.')
-    return
-  }
-
+  if (nuevaCategoriaNombre.value.trim() === '') return
   try {
-    const { data, error } = await supabase
-      .from('categorias')
-      .insert({ nombre: nuevaCategoriaNombre.value.trim() })
-      .select()
-      .single() // .single() para obtener un solo objeto en lugar de un array
-
-    if (error) throw error
-
-    categorias.value.push(data)
+    const nuevaCategoria = await createCategory(nuevaCategoriaNombre.value)
+    categorias.value.push(nuevaCategoria)
     nuevaCategoriaNombre.value = ''
-    // Quitamos la alerta para una mejor experiencia de usuario
+    toast.success('Categoría creada con éxito.')
   } catch (error) {
-    console.error('Error al agregar categoría:', error.message)
-    alert('Hubo un error al guardar la categoría.')
+    toast.error('Hubo un error al agregar la categoría.')
   }
 }
 
-// 3. Función para ELIMINAR una categoría (¡NUEVO!)
-async function eliminarCategoria(id) {
-  // Pedimos confirmación para evitar borrados accidentales
-  if (!confirm('¿Estás seguro de que quieres eliminar esta categoría?')) return
 
-  try {
-    const { error } = await supabase
-      .from('categorias')
-      .delete()
-      .eq('id', id)
-
-    if (error) throw error
-
-    // Eliminamos la categoría de la lista local para actualizar la vista
-    categorias.value = categorias.value.filter(cat => cat.id !== id)
-  } catch (error) {
-    console.error('Error al eliminar categoría:', error.message)
-    alert('Hubo un error al eliminar la categoría.')
-  }
+// --- NUEVA LÓGICA DE EDICIÓN ---
+// Abre el modal de edición
+function promptEditarCategoria(categoria) {
+  categoryToEdit.value = categoria
+  showEditModal.value = true
 }
 
-// 4. Función para EDITAR una categoría (¡NUEVO!)
-async function editarCategoria(categoria) {
-  const nuevoNombre = prompt('Introduce el nuevo nombre para la categoría:', categoria.nombre)
-
-  if (nuevoNombre === null || nuevoNombre.trim() === '') return // El usuario canceló o no escribió nada
-
+// Guarda los cambios desde el modal
+async function handleUpdateCategory(nuevoNombre) {
+  if (!categoryToEdit.value) return
   try {
-    const { data, error } = await supabase
-      .from('categorias')
-      .update({ nombre: nuevoNombre.trim() })
-      .eq('id', categoria.id)
-      .select()
-      .single()
-
-    if (error) throw error
-
-    // Actualizamos la categoría en la lista local
-    const index = categorias.value.findIndex(cat => cat.id === categoria.id)
+    const categoriaActualizada = await updateCategory(categoryToEdit.value.id, nuevoNombre)
+    const index = categorias.value.findIndex(cat => cat.id === categoryToEdit.value.id)
     if (index !== -1) {
-      categorias.value[index] = data
+      categorias.value[index] = categoriaActualizada
     }
+    toast.success('Categoría actualizada con éxito.')
   } catch (error) {
-    console.error('Error al editar categoría:', error.message)
-    alert('Hubo un error al editar la categoría.')
+    toast.error('Hubo un error al editar la categoría.')
+  } finally {
+    showEditModal.value = false
+    categoryToEdit.value = null
   }
 }
 
-// Se ejecuta al cargar el componente
+// Esta función AHORA solo abre el modal
+function promptEliminarCategoria(categoria) {
+  categoryToDelete.value = categoria
+  showConfirmModal.value = true
+}
+
+// Esta es la nueva función que realmente borra la categoría
+async function handleEliminarCategoria() {
+  if (!categoryToDelete.value) return
+  try {
+    await deleteCategory(categoryToDelete.value.id)
+    categorias.value = categorias.value.filter(cat => cat.id !== categoryToDelete.value.id)
+    toast.success('Categoría eliminada.')
+  } catch (error) {
+    toast.error('Error al eliminar la categoría.')
+  } finally {
+    // Cierra el modal y resetea la variable
+    showConfirmModal.value = false
+    categoryToDelete.value = null
+  }
+}
+
 onMounted(obtenerCategorias)
 </script>
 
 <template>
   <div>
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestionar Categorías</h1>
+    <h1 class="text-2xl font-bold text-gray-800">Gestionar Categorías</h1>
+    <p class="text-sm text-gray-500 mb-6">Crea y administra las categorías para tus productos.</p>
 
-    <form @submit.prevent="agregarCategoria" class="mb-8 bg-white p-6 rounded-lg shadow-md">
+    <div class="mb-8 bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-xl font-semibold mb-4 text-gray-700">Añadir Nueva Categoría</h2>
-      <div class="flex items-center gap-4">
-        <input type="text" v-model="nuevaCategoriaNombre" placeholder="Ej: Galletas Clásicas"
-          class="flex-grow p-2 border border-gray-300 rounded-md focus-within:outline-none focus:ring-1 focus:ring-brand-fucsia focus:border-brand-fucsia" />
-        <button type="submit"
-          class="bg-brand-fucsia text-white font-bold py-2 px-6 rounded-md hover:bg-opacity-90 transition-colors">
+      <form @submit.prevent="agregarCategoria" class="flex items-center gap-4">
+        <input type="text" v-model="nuevaCategoriaNombre" placeholder="Ej: Galletas Rellenas"
+          class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50" />
+        <CustomButton type="submit">
+          <PlusIcon class="h-5 w-5" />
           Guardar
-        </button>
-      </div>
-    </form>
+        </CustomButton>
+      </form>
+    </div>
 
     <div class="bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-xl font-semibold mb-4 text-gray-700">Categorías Existentes</h2>
-      <div v-if="cargando" class="text-gray-500">Cargando categorías...</div>
-      <div v-else-if="errorMsg" class="text-red-500">{{ errorMsg }}</div>
+      <div v-if="cargando" class="space-y-3">
+        <SkeletonLoader v-for="n in 3" :key="n" class="h-12 w-full" />
+      </div>
       <ul v-else-if="categorias.length > 0" class="space-y-3">
-        <li v-for="categoria in categorias" :key="categoria.id"
-          class="bg-slate-100 p-3 rounded-md flex justify-between items-center border border-gray-300">
-          <div>
-            <p class="text-xs text-gray-500 mb-0">Nombre</p>
-            <span class="text-gray-800">{{ categoria.nombre }}</span>
-          </div>
-
-          <div class="gap-2 flex">
-            <button @click="editarCategoria(categoria)" class="text-xs flex items-center gap-1 transition-all text-white p-2 bg-blue-600 hover:bg-blue-800 rounded-md font-semibold">
-              <PencilSquareIcon class="h-[1.15rem] w-[1.15rem]" />
-              Editar
-            </button>
-            <button @click="eliminarCategoria(categoria.id)" class="text-xs flex items-center gap-1 transition-all text-white p-2 bg-red-600 hover:bg-red-800 rounded-md font-semibold">
-              <TrashIcon class="h-[1.15rem] w-[1.15rem]" />
-              Eliminar
-            </button>
-          </div>
-        </li>
+        <CategoryListItem v-for="categoria in categorias" :key="categoria.id" :category="categoria"
+          @edit="promptEditarCategoria" @delete="promptEliminarCategoria" />
       </ul>
-      <div v-else class="text-gray-500">Aún no has añadido ninguna categoría.</div>
+      <EmptyState v-else title="Aún no hay categorías"
+        message="Empieza añadiendo tu primera categoría para que aparezca aquí.">
+        <template #icon>
+          <TagIcon class="h-8 w-8 text-gray-400" />
+        </template>
+      </EmptyState>
     </div>
+
+    <ConfirmModal :show="showConfirmModal" title="Confirmar Eliminación"
+      :message="`¿Estás seguro de que quieres eliminar la categoría '${categoryToDelete?.nombre}'? Esta acción no se puede deshacer.`"
+      @confirm="handleEliminarCategoria" @cancel="showConfirmModal = false" />
+
+    <EditCategoryModal :show="showEditModal" :category="categoryToEdit" @close="showEditModal = false"
+      @save="handleUpdateCategory" />
   </div>
 </template>

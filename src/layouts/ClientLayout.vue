@@ -26,7 +26,11 @@ const cartStore = useCartStore()
     </header>
 
     <main class="container mx-auto px-4 py-8 min-h-screen">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <Transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
     </main>
 
     <footer class="bg-brand-morado text-white py-6">
@@ -37,3 +41,15 @@ const cartStore = useCartStore()
     </footer>
   </div>
 </template>
+
+<style>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

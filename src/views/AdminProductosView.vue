@@ -1,43 +1,45 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+// Importaciones de nuestro nuevo servicio
+import { getProductsWithCategory, createProduct, updateProduct, deleteProduct } from '@/services/productService'
 import { supabase } from '../supabase'
-import {
-  PlusIcon,
-  PencilSquareIcon,
-  TrashIcon,
-  ChevronDownIcon,
-  XCircleIcon
-} from '@heroicons/vue/24/outline'
 
-// --- ESTADO ---
+// Importaciones de componentes e íconos...
+import CustomButton from '@/components/CustomButton.vue'
+import EmptyState from '@/components/EmptyState.vue';
+import ProductListItem from '@/components/ProductListItem.vue'
+import { PlusIcon, PencilSquareIcon, XCircleIcon, CubeIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import SkeletonLoader from '@/components/SkeletonLoader.vue';
+import { useToast } from 'vue-toastification'
+import ConfirmModal from '@/components/ConfirmModal.vue' // <-- Importamos el modal
+
+const toast = useToast()
+// --- ESTADO DE LA VISTA ---
 const productos = ref([])
 const categorias = ref([])
 const cargando = ref(true)
 const modoEdicion = ref(false)
 const productoAEditar = ref(null)
 const formAbierto = ref(false)
-
-const nuevoProducto = ref({
-  nombre: '',
-  descripcion: '',
-  precio: 0,
-  stock: 0,
-  categoria_id: null,
-})
+const nuevoProducto = ref({ nombre: '', descripcion: '', precio: 0, stock: 0, categoria_id: null })
 const archivoImagen = ref(null)
 
-// --- LÓGICA (Sin cambios) ---
+// --- ESTADO PARA MODAL DE CONFIRMACIÓN ---
+const showConfirmModal = ref(false)
+const productToDelete = ref(null)
+
+// --- LÓGICA ---
 async function obtenerDatosIniciales() {
   try {
     cargando.value = true
-    const { data: dataCategorias, error: errorCategorias } = await supabase.from('categorias').select('id, nombre')
-    if (errorCategorias) throw errorCategorias
-    categorias.value = dataCategorias
-    const { data: dataProductos, error: errorProductos } = await supabase.from('productos').select(`*, categorias (nombre)`)
-    if (errorProductos) throw errorProductos
-    productos.value = dataProductos
+    // Obtenemos categorías (esto lo moveremos a su propio servicio después)
+    const { data: cats } = await supabase.from('categorias').select('id, nombre')
+    categorias.value = cats
+
+    // Usamos nuestro nuevo servicio para obtener los productos
+    productos.value = await getProductsWithCategory()
   } catch (error) {
-    console.error('Error al cargar datos:', error.message)
+    alert(error || 'Error al cargar los datos iniciales.')
   } finally {
     cargando.value = false
   }
@@ -59,30 +61,49 @@ function resetearFormulario() {
 }
 
 async function guardarProducto() {
-  if (modoEdicion.value) {
-    actualizarProducto()
-  } else {
-    crearProducto()
+  try {
+    if (modoEdicion.value) {
+      // Usamos el servicio de actualización
+      const dataActualizado = await updateProduct(
+        productoAEditar.value.id,
+        nuevoProducto.value,
+        archivoImagen.value,
+        productoAEditar.value.foto_url
+      )
+      const index = productos.value.findIndex(p => p.id === dataActualizado.id)
+      if (index !== -1) productos.value[index] = dataActualizado
+    } else {
+      // Usamos el servicio de creación
+      const nuevo = await createProduct(nuevoProducto.value, archivoImagen.value)
+      productos.value.push(nuevo)
+    }
+    toast.success(modoEdicion.value ? '¡Producto actualizado!' : '¡Producto creado con éxito!')
+    resetearFormulario()
+  } catch (error) {
+    toast.error('Ocurrió un error al guardar el producto.')
   }
 }
 
-async function crearProducto() {
-  if (!nuevoProducto.value.nombre || nuevoProducto.value.precio <= 0 || !nuevoProducto.value.categoria_id || !archivoImagen.value) {
-    alert('Por favor, completa Nombre, Precio, Categoría y selecciona una imagen.')
-    return
-  }
+// --- LÓGICA DE ELIMINACIÓN ACTUALIZADA ---
+
+// 1. Esta función abre el modal
+function promptEliminarProducto(producto) {
+  productToDelete.value = producto
+  showConfirmModal.value = true
+}
+
+// 2. Esta función se ejecuta si el usuario confirma en el modal
+async function handleEliminarProducto() {
+  if (!productToDelete.value) return
   try {
-    const extensionArchivo = archivoImagen.value.name.split('.').pop()
-    const nombreArchivo = `${Date.now()}.${extensionArchivo}`
-    await supabase.storage.from('imagenes-productos').upload(`public/${nombreArchivo}`, archivoImagen.value)
-    const { data: dataUrl } = supabase.storage.from('imagenes-productos').getPublicUrl(`public/${nombreArchivo}`)
-    const productoParaGuardar = { ...nuevoProducto.value, foto_url: dataUrl.publicUrl, precio: parseFloat(nuevoProducto.value.precio.toFixed(2)) }
-    const { data: dataProducto, error: errorProducto } = await supabase.from('productos').insert(productoParaGuardar).select(`*, categorias (nombre)`).single()
-    if (errorProducto) throw errorProducto
-    productos.value.push(dataProducto)
-    resetearFormulario()
+    await deleteProduct(productToDelete.value)
+    productos.value = productos.value.filter(p => p.id !== productToDelete.value.id)
+    toast.success(`Producto "${productToDelete.value.nombre}" eliminado.`)
   } catch (error) {
-    console.error('Error al crear producto:', error.message)
+    toast.error('Ocurrió un error al eliminar el producto.')
+  } finally {
+    showConfirmModal.value = false
+    productToDelete.value = null
   }
 }
 
@@ -98,45 +119,6 @@ function iniciarEdicion(producto) {
   }
   formAbierto.value = true
   window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-async function actualizarProducto() {
-  try {
-    let urlImagenActualizada = productoAEditar.value.foto_url;
-    if (archivoImagen.value) {
-      const urlAntigua = productoAEditar.value.foto_url;
-      const rutaAntigua = `public/${urlAntigua.split('/').pop()}`;
-      const extensionArchivo = archivoImagen.value.name.split('.').pop();
-      const nombreArchivo = `${Date.now()}.${extensionArchivo}`;
-      const nuevaRuta = `public/${nombreArchivo}`;
-      await supabase.storage.from('imagenes-productos').upload(nuevaRuta, archivoImagen.value);
-      const { data: dataUrl } = supabase.storage.from('imagenes-productos').getPublicUrl(nuevaRuta);
-      urlImagenActualizada = dataUrl.publicUrl;
-      if (rutaAntigua) {
-        await supabase.storage.from('imagenes-productos').remove([rutaAntigua]);
-      }
-    }
-    const datosParaActualizar = { ...nuevoProducto.value, foto_url: urlImagenActualizada, precio: parseFloat(nuevoProducto.value.precio.toFixed(2)) };
-    const { data: dataActualizado, error } = await supabase.from('productos').update(datosParaActualizar).eq('id', productoAEditar.value.id).select(`*, categorias (nombre)`).single();
-    if (error) throw error;
-    const index = productos.value.findIndex(p => p.id === dataActualizado.id);
-    if (index !== -1) productos.value[index] = dataActualizado;
-    resetearFormulario();
-  } catch (error) {
-    console.error('Error al actualizar producto:', error.message);
-  }
-}
-
-async function eliminarProducto(producto) {
-  if (!confirm(`¿Seguro que quieres eliminar "${producto.nombre}"?`)) return
-  try {
-    const nombreArchivo = producto.foto_url.split('/').pop()
-    await supabase.storage.from('imagenes-productos').remove([`public/${nombreArchivo}`])
-    await supabase.from('productos').delete().eq('id', producto.id)
-    productos.value = productos.value.filter(p => p.id !== producto.id)
-  } catch (error) {
-    console.error('Error al eliminar producto:', error.message)
-  }
 }
 
 onMounted(obtenerDatosIniciales)
@@ -193,17 +175,15 @@ onMounted(obtenerDatosIniciales)
               imagen actual.</p>
           </div>
           <div class="flex justify-end items-center gap-4 pt-4 border-t">
-            <button v-if="modoEdicion" @click="resetearFormulario" type="button"
-              class="inline-flex items-center gap-2 bg-gray-200 text-gray-700 font-bold py-2 px-6 rounded-md hover:bg-gray-300 transition-colors">
+            <CustomButton v-if="modoEdicion" @click="resetearFormulario" variant="secondary">
               <XCircleIcon class="h-5 w-5" />
               Cancelar
-            </button>
-            <button type="submit"
-              class="inline-flex items-center gap-2 bg-brand-fucsia hover:bg-brand-fucsia-dark text-white font-bold py-2 px-6 rounded-md transition-all">
+            </CustomButton>
+            <CustomButton type="submit">
               <PlusIcon v-if="!modoEdicion" class="h-5 w-5" />
               <PencilSquareIcon v-else class="h-5 w-5" />
               {{ modoEdicion ? 'Guardar Cambios' : 'Guardar Producto' }}
-            </button>
+            </CustomButton>
           </div>
         </form>
       </Transition>
@@ -211,37 +191,40 @@ onMounted(obtenerDatosIniciales)
     <div class="mt-8 bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-xl font-bold text-gray-700">Productos Existentes</h2>
       <p class="text-sm text-gray-500 mb-4">Gestiona tu inventario actual de productos.</p>
-      <div v-if="cargando" class="text-center p-4">Cargando...</div>
-      <ul v-else class="space-y-4">
-        <li v-for="producto in productos" :key="producto.id"
-          class="flex items-center gap-4 p-4 border rounded-lg hover:bg-slate-50 transition-colors">
-          <img :src="producto.foto_url" alt="" class="w-16 h-16 rounded-md object-cover bg-gray-200" />
-          <div class="flex-grow">
-            <p class="font-bold text-gray-800">{{ producto.nombre }}</p>
-            <p class="text-sm text-gray-500">{{ producto.categorias.nombre }}</p>
+      <div v-if="cargando" class="space-y-4">
+        <div v-for="n in 3" :key="n" class="flex items-center gap-4 p-4 border rounded-lg">
+          <SkeletonLoader class="w-16 h-16 rounded-md flex-shrink-0" />
+          <div class="flex-grow space-y-2">
+            <SkeletonLoader class="h-4 w-3/4" />
+            <SkeletonLoader class="h-3 w-1/2" />
           </div>
-          <div class="text-center">
-            <p class="text-sm text-gray-500">Stock</p>
-            <p class="font-bold" :class="producto.stock < 5 ? 'text-red-500' : 'text-gray-700'">{{ producto.stock }}</p>
-          </div>
-          <div class="text-center">
-            <p class="text-sm text-gray-500">Precio</p>
-            <p class="font-bold text-gray-700">${{ producto.precio.toFixed(2) }}</p>
-          </div>
-          <div class="flex gap-2">
-            <button @click="iniciarEdicion(producto)"
-              class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-md">
-              <PencilSquareIcon class="h-5 w-5" />
-            </button>
-            <button @click="eliminarProducto(producto)"
-              class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-md">
-              <TrashIcon class="h-5 w-5" />
-            </button>
-          </div>
-        </li>
+        </div>
+      </div>
+      <ul v-else-if="productos.length > 0" class="space-y-4">
+        <ProductListItem v-for="producto in productos" :key="producto.id" :product="producto" @edit="iniciarEdicion"
+          @delete="promptEliminarProducto" />
       </ul>
+      <EmptyState v-else title="Aún no hay productos"
+        message="Empieza añadiendo tu primer producto para que aparezca aquí.">
+        <template #icon>
+          <CubeIcon class="h-8 w-8 text-gray-400" />
+        </template>
+        <template #action>
+          <CustomButton @click="formAbierto = true">
+            <PlusIcon class="h-5 w-5" />
+            Añadir Producto
+          </CustomButton>
+        </template>
+      </EmptyState>
     </div>
   </div>
+  <ConfirmModal
+      :show="showConfirmModal"
+      title="Confirmar Eliminación de Producto"
+      :message="`¿Estás seguro de que quieres eliminar '${productToDelete?.nombre}'? Esta acción es permanente.`"
+      @confirm="handleEliminarProducto"
+      @cancel="showConfirmModal = false"
+    />
 </template>
 
 <style scoped>

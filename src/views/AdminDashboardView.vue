@@ -1,67 +1,58 @@
 <script setup>
-import { onMounted, ref, computed } from 'vue'
-import { supabase } from '../supabase'
+import { ref, onMounted } from 'vue'
+// Importamos nuestro nuevo servicio y componente
+import { getDashboardStats } from '@/services/dashboardService'
+import StatCard from '@/components/StatCard.vue'
+import SkeletonLoader from '@/components/SkeletonLoader.vue';
+// Importamos los íconos
 import { CubeIcon, BanknotesIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 
-const productos = ref([])
+// --- ESTADO DE LA VISTA ---
+const stats = ref({
+  totalProducts: 0,
+  inventoryValue: 0,
+  lowStockCount: 0,
+})
 const cargando = ref(true)
 
-// Función para obtener los datos de los productos
-async function obtenerProductos() {
+// --- LÓGICA DE LA VISTA ---
+async function obtenerEstadisticas() {
+  cargando.value = true
   try {
-    cargando.value = true
-    const { data, error } = await supabase.from('productos').select('precio, stock')
-    if (error) throw error
-    productos.value = data
+    // Usamos el servicio para obtener todas las estadísticas de una vez
+    stats.value = await getDashboardStats()
   } catch (error) {
-    console.error('Error al obtener productos:', error.message)
+    alert('No se pudieron cargar las estadísticas del dashboard.')
   } finally {
     cargando.value = false
   }
 }
 
-// Datos calculados para las tarjetas
-const totalProductos = computed(() => productos.value.length)
-const valorInventario = computed(() =>
-  productos.value.reduce((total, producto) => total + (producto.precio * producto.stock), 0)
-)
-const bajoStock = computed(() =>
-  productos.value.filter(producto => producto.stock < 5).length
-)
-
-onMounted(obtenerProductos)
+onMounted(obtenerEstadisticas)
 </script>
 
 <template>
   <div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-500">Total Productos</p>
-          <p class="text-3xl font-bold text-gray-800">{{ totalProductos }}</p>
-        </div>
-        <div class="bg-blue-100 text-blue-600 p-3 rounded-full">
-          <CubeIcon class="h-6 w-6" />
-        </div>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-500">Valor Inventario</p>
-          <p class="text-3xl font-bold text-gray-800">${{ valorInventario.toFixed(2) }}</p>
-        </div>
-        <div class="bg-green-100 text-green-600 p-3 rounded-full">
-          <BanknotesIcon class="h-6 w-6" />
-        </div>
-      </div>
-      <div class="bg-white p-6 rounded-lg shadow-md flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-gray-500">Bajo Stock (&lt;5)</p>
-          <p class="text-3xl font-bold text-gray-800">{{ bajoStock }}</p>
-        </div>
-        <div class="bg-red-100 text-red-600 p-3 rounded-full">
-          <ExclamationTriangleIcon class="h-6 w-6" />
-        </div>
-      </div>
+    <div v-if="cargando" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <SkeletonLoader class="h-28" />
+      <SkeletonLoader class="h-28" />
+      <SkeletonLoader class="h-28" />
+    </div>
+    <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <StatCard title="Total Productos" :value="stats.totalProducts" bgColorClass="bg-blue-100"
+        iconColorClass="text-blue-600">
+        <CubeIcon class="h-6 w-6" />
+      </StatCard>
+
+      <StatCard title="Valor Inventario" :value="`$${stats.inventoryValue.toFixed(2)}`" bgColorClass="bg-green-100"
+        iconColorClass="text-green-600">
+        <BanknotesIcon class="h-6 w-6" />
+      </StatCard>
+
+      <StatCard title="Bajo Stock (<5)" :value="stats.lowStockCount" bgColorClass="bg-red-100"
+        iconColorClass="text-red-600">
+        <ExclamationTriangleIcon class="h-6 w-6" />
+      </StatCard>
     </div>
 
     <div class="bg-white p-6 rounded-lg shadow-md">

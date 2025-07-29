@@ -4,6 +4,7 @@ import { ref, computed } from 'vue'
 
 export const useCartStore = defineStore('cart', () => {
   const items = ref([])
+  const recentlyAddedId = ref(null) // <-- NUEVA LÍNEA
 
   // --- GETTERS (Propiedades calculadas) ---
   const totalItems = computed(() => {
@@ -24,6 +25,11 @@ export const useCartStore = defineStore('cart', () => {
     } else {
       items.value.push({ ...product, quantity: 1 })
     }
+      recentlyAddedId.value = product.id // <-- NUEVA LÍNEA
+    // Hacemos que el estado "recién añadido" dure 1 segundo
+    setTimeout(() => { // <-- NUEVO BLOQUE
+      recentlyAddedId.value = null
+    }, 1000)
   }
 
   function removeFromCart(productId) {
@@ -47,11 +53,12 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   function clearCart() {
-  items.value = []
-}
+    items.value = []
+  }
 
   return {
     items,
+    recentlyAddedId,
     addToCart,
     removeFromCart,
     updateQuantity,

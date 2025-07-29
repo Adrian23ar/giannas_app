@@ -1,7 +1,8 @@
 <script setup>
 import { useCartStore } from '@/stores/cartStore'
 import { RouterLink } from 'vue-router'
-import { TrashIcon } from '@heroicons/vue/24/outline'
+import { TrashIcon, ShoppingCartIcon } from '@heroicons/vue/24/outline'
+import EmptyState from '@/components/EmptyState.vue'
 
 const cartStore = useCartStore()
 </script>
@@ -11,7 +12,12 @@ const cartStore = useCartStore()
     <h1 class="text-4xl font-bold text-brand-morado mb-8">Tu Carrito de Compras</h1>
 
     <div v-if="cartStore.items.length === 0" class="text-center p-12 border-2 border-dashed rounded-lg">
-      <p class="text-gray-500 text-lg">Tu carrito está vacío.</p>
+      <EmptyState title="Carrito Vacio"
+        message="Añade productos a tu carrito para verlos aqui.">
+        <template #icon>
+          <ShoppingCartIcon class="h-8 w-8 text-gray-400" />
+        </template>
+      </EmptyState>
       <RouterLink to="/" class="mt-4 inline-block bg-brand-fucsia text-white font-bold py-2 px-6 rounded-md">
         Ver catálogo
       </RouterLink>

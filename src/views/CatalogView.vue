@@ -44,9 +44,19 @@ onMounted(obtenerProductos)
           <h2 class="text-xl font-bold text-gray-800">{{ producto.nombre }}</h2>
           <p class="text-brand-morado font-semibold text-lg mt-1">${{ producto.precio.toFixed(2) }}</p>
           <p class="text-gray-600 text-sm mt-2 h-14">{{ producto.descripcion }}</p>
-          <button @click="cartStore.addToCart(producto)"
-            class="w-full mt-4 bg-brand-fucsia text-white font-bold py-2 rounded-md hover:bg-opacity-90 transition-colors">
-            Añadir al carrito
+          <button @click="cartStore.addToCart(producto)" :disabled="cartStore.recentlyAddedId === producto.id"
+            class="w-full mt-4 text-white font-bold py-2 rounded-md transition-colors flex items-center justify-center"
+            :class="cartStore.recentlyAddedId === producto.id
+              ? 'bg-green-500'
+              : 'bg-brand-fucsia hover:bg-opacity-90'">
+            <span v-if="cartStore.recentlyAddedId !== producto.id">Añadir al carrito</span>
+            <span v-else class="flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              Añadido
+            </span>
           </button>
         </div>
       </div>
