@@ -14,6 +14,7 @@ import CartView from '../views/CartView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
 import OrderConfirmationView from '../views/OrderConfirmationView.vue'
 import AdminPedidosView from '../views/AdminPedidosView.vue'
+import TrackingView from '../views/TrackingView.vue'; // <-- Importa la nueva vista
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -25,9 +26,9 @@ const router = createRouter({
       children: [
         { path: '', name: 'catalog', component: CatalogView },
         { path: 'cart', name: 'cart', component: CartView },
-        // AÑADE ESTAS DOS RUTAS
         { path: 'checkout', name: 'checkout', component: CheckoutView },
         { path: 'confirmation/:orderId', name: 'confirmation', component: OrderConfirmationView },
+        { path: 'seguimiento', name: 'tracking', component: TrackingView }, // <-- AÑADE ESTA LÍNEA
       ],
     },
 

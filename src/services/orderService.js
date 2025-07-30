@@ -59,3 +59,36 @@ export const updateOrderStatus = async (orderId, newStatus) => {
   }
   return data
 }
+
+// src/services/orderService.js
+
+/**
+ * Obtiene los detalles de un pedido por su ID para la página de seguimiento.
+ * Es la misma que getOrderDetails, pero la renombramos para claridad.
+ * @param {number} orderId - El ID del pedido a buscar.
+ */
+export const findOrderById = async (orderId) => {
+  if (!orderId) throw new Error("Se requiere un ID de pedido.");
+
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select(`
+      id,
+      created_at,
+      estado,
+      total,
+      detalles_pedido ( cantidad, precio_unitario, productos (nombre) )
+    `)
+    .eq('id', orderId)
+    .single();
+
+  if (error) {
+    // Si no se encuentra el pedido, Supabase devuelve un error.
+    // Lo manejamos para dar un mensaje claro.
+    if (error.code === 'PGRST116') {
+      throw new Error(`No se encontró ningún pedido con el ID #${orderId}.`);
+    }
+    throw error;
+  }
+  return data;
+}

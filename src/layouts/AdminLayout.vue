@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
+import AdminNotificationBell from '@/components/AdminNotificationBell.vue';
 import { supabase } from '../supabase'
 import {
   ArrowLeftOnRectangleIcon,
@@ -93,7 +94,8 @@ watch(route, () => {
         </button>
         <h1 class="text-xl md:text-2xl font-bold text-gray-800">{{$route.name.split('-').map(w =>
           w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}}</h1>
-        <div class="w-6"></div>
+          <AdminNotificationBell />
+
       </header>
       <main class="p-4 md:p-6 max-w-6xl mx-auto">
         <RouterView />

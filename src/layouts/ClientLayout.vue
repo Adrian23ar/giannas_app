@@ -13,6 +13,7 @@ const cartStore = useCartStore()
         </RouterLink>
 
         <div class="flex items-center gap-6">
+          <RouterLink to="/seguimiento" class="text-gray-700 hover:text-brand-fucsia font-medium">Seguimiento</RouterLink>
           <RouterLink to="/" class="text-gray-700 hover:text-brand-fucsia font-medium">Catálogo</RouterLink>
           <RouterLink to="/cart" class="relative text-gray-700 hover:text-brand-fucsia font-medium">
             <span>Carrito</span>
