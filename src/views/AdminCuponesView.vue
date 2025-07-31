@@ -3,7 +3,7 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { getCoupons, createCoupon, deleteCoupon, updateCouponStatus, updateCoupon } from '@/services/couponService'
-
+import { formatDisplayDate } from '@/utils/formatters.js'
 import CustomButton from '@/components/CustomButton.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import EditCouponModal from '@/components/EditCouponModal.vue' // <-- Nuevo
@@ -113,8 +113,6 @@ async function handleUpdateCoupon(couponData) {
   }
 }
 
-
-
 onMounted(obtenerCupones)
 </script>
 
@@ -184,11 +182,10 @@ onMounted(obtenerCupones)
             <div>
               <p class="font-bold text-lg" :class="!cupon.activo && 'text-gray-400 line-through'">{{ cupon.codigo }}</p>
               <p class="text-sm text-gray-600">Descuento de {{ cupon.valor }}{{ cupon.tipo === 'porcentaje' ? '%' : '$'
-              }}</p>
+                }}</p>
               <div class="text-xs text-gray-500 mt-2 space-x-4">
                 <span>Usos: {{ cupon.usos_actuales }} / {{ cupon.usos_maximos || '∞' }}</span>
-                <span v-if="cupon.fecha_expiracion">Expira: {{ new Date(cupon.fecha_expiracion).toLocaleDateString()
-                }}</span>
+                <span v-if="cupon.fecha_expiracion">Expira: {{ formatDisplayDate(cupon.fecha_expiracion) }}</span>
               </div>
             </div>
             <div class="flex items-center gap-3 self-end md:self-center">

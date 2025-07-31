@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 // Importamos las funciones de nuestro nuevo servicio
 import { getOrders, getOrderDetails, updateOrderStatus } from '@/services/orderService'
-
+import { formatDisplayDate } from '@/utils/formatters.js'
 // Componentes y utilidades
 import EmptyState from '@/components/EmptyState.vue';
 import { ShoppingCartIcon } from '@heroicons/vue/24/outline';
@@ -15,13 +15,6 @@ const cargando = ref(true)
 const modalActivo = ref(false)
 const pedidoSeleccionado = ref(null)
 
-// --- LÓGICA ---
-// Formatea la fecha para que sea más legible
-function formatFecha(fecha) {
-  return new Date(fecha).toLocaleDateString('es-VE', {
-    year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
-  })
-}
 
 // Llama al servicio para obtener la lista de pedidos
 async function obtenerPedidos() {
@@ -100,7 +93,7 @@ onMounted(obtenerPedidos)
           <tr v-else-if="pedidos.length > 0" v-for="pedido in pedidos" :key="pedido.id"
             class="bg-white border-b hover:bg-gray-50">
             <td class="px-6 py-4 font-medium">#{{ pedido.id }}</td>
-            <td class="px-6 py-4">{{ formatFecha(pedido.created_at) }}</td>
+            <td class="px-6 py-4">{{ formatDisplayDate(pedido.created_at) }}</td>
             <td class="px-6 py-4">{{ pedido.nombre_cliente }}</td>
             <td class="px-6 py-4">${{ pedido.total.toFixed(2) }}</td>
             <td class="px-6 py-4">
@@ -155,8 +148,8 @@ onMounted(obtenerPedidos)
             <h3 class="font-bold mb-2">Detalles del Pago</h3>
             <p><strong>Referencia:</strong> {{ pedidoSeleccionado.pagos[0]?.nro_referencia || 'N/A' }}</p>
             <p><strong>Banco Emisor:</strong> {{ pedidoSeleccionado.pagos[0]?.banco_emisor || 'N/A' }}</p>
-            <p><strong>Fecha:</strong> {{ pedidoSeleccionado.pagos[0] ? formatFecha(pedidoSeleccionado.pagos[0].fecha) :
-              'N/A' }}</p>
+            <p><strong>Fecha:</strong> {{ formatDisplayDate(pedidoSeleccionado.pagos[0]?.fecha) }}</p>
+
             <p><strong>Monto:</strong> ${{ pedidoSeleccionado.pagos[0]?.monto.toFixed(2) || '0.00' }}</p>
           </section>
           <section>

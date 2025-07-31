@@ -69,7 +69,7 @@ function orderViaWhatsApp() {
           <h2 class="text-2xl font-bold border-b pb-4">Resumen del Pedido</h2>
           <div class="flex justify-between items-center mt-4">
             <p class="text-gray-600">Subtotal</p>
-            <p class="font-bold text-lg">${{ cartStore.totalPrice.toFixed(2) }}</p>
+            <p class="font-bold text-lg">${{ cartStore.subtotal.toFixed(2) }}</p>
           </div>
           <p class="text-xs text-gray-500 mt-2">Costos de envío se calcularán en el siguiente paso.</p>
           <RouterLink to="/checkout"

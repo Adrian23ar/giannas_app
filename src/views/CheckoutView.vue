@@ -1,34 +1,74 @@
 <script setup>
-import { ref } from 'vue'
+// src/views/CheckoutView.vue
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cartStore'
+import { useToast } from 'vue-toastification'
 import { supabase } from '../supabase'
-
-// Importaciones para el mapa
-import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet";
+import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet"
+import L from 'leaflet'
+import CustomButton from '@/components/CustomButton.vue'
 
 const cartStore = useCartStore()
 const router = useRouter()
+const toast = useToast()
 
 // --- Estado del formulario ---
 const cliente = ref({ nombre: '', telefono: '' })
 const metodoEntrega = ref('recogida')
 const direccion = ref('')
-const pago = ref({ referencia: '', fecha: '', banco_emisor: '', monto: cartStore.totalPrice.toFixed(2) })
+const pago = ref({ referencia: '', fecha: '', banco_emisor: '' }) // Monto se tomará del total final
 const procesando = ref(false)
+// Esta propiedad calcula la fecha de hoy en el formato YYYY-MM-DD
+const maxDate = computed(() => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Se añade +1 porque los meses empiezan en 0
+  const day = today.getDate().toString().padStart(2, '0');
+  return `${year}-${month}-${day}`;
+});
 
-// --- Estado del Mapa ---
-const zoom = ref(14); // <-- SOLUCIÓN 2: Definimos la variable 'zoom'
+// --- Estado del Cupón ---
+const showCouponInput = ref(false)
+const couponCode = ref('')
+
+// --- Lógica del Mapa (sin cambios) ---
+const zoom = ref(14);
 const mapCenter = ref([10.196, -71.313])
 const markerLatLng = ref([10.196, -71.313])
-const isLocating = ref(false); // Para saber si ya estamos buscando la ubicación
+const isLocating = ref(false);
 
+
+const bancos = ref([
+  { code: "0102", name: "BANCO DE VENEZUELA" },
+  { code: "0104", name: "BANCO VENEZOLANO DE CREDITO" },
+  { code: "0105", name: "BANCO MERCANTIL" },
+  { code: "0108", name: "BBVA PROVINCIAL" },
+  { code: "0114", name: "BANCARIBE" },
+  { code: "0115", name: "BANCO EXTERIOR" },
+  { code: "0128", name: "BANCO CARONI" },
+  { code: "0134", name: "BANESCO" },
+  { code: "0137", name: "BANCO SOFITASA" },
+  { code: "0138", name: "BANCO PLAZA" },
+  { code: "0146", name: "BANGENTE" },
+  { code: "0151", name: "BANCO FONDO COMUN" },
+  { code: "0156", name: "100% BANCO" },
+  { code: "0157", name: "DELSUR BANCO UNIVERSAL" },
+  { code: "0163", name: "BANCO DEL TESORO" },
+  { code: "0168", name: "BANCRECER" },
+  { code: "0169", name: "MI BANCO" },
+  { code: "0171", name: "BANCO ACTIVO" },
+  { code: "0172", name: "BANCAMIGA" },
+  { code: "0173", name: "BANCO INTERNACIONAL DE DESARROLLO" },
+  { code: "0174", name: "BANPLUS" },
+  { code: "0175", name: "BANCO BICENTENARIO" },
+  { code: "0177", name: "BANFANB" },
+  { code: "0191", name: "BANCO NACIONAL DE CREDITO" }
+]);
 
 function onMarkerDragEnd(event) {
   markerLatLng.value = [event.target.getLatLng().lat, event.target.getLatLng().lng]
 }
-
-// ... tus otras importaciones y código ...
 
 async function getUserLocation() {
   // 1. Evita que la función se ejecute si ya está en proceso
@@ -84,16 +124,36 @@ async function getUserLocation() {
   }
 }
 
+// --- Lógica de Cupones y Pedido ---
+async function handleApplyCoupon() {
+  if (!couponCode.value.trim()) return
+  try {
+    const coupon = await cartStore.applyCoupon(couponCode.value)
+    toast.success(`¡Cupón "${coupon.codigo}" aplicado con éxito!`)
+  } catch (error) {
+    toast.error(error.message)
+  }
+}
+
+function handleRemoveCoupon() {
+  cartStore.removeCoupon()
+  toast.info('Cupón eliminado.')
+}
+
 async function procesarPedido() {
-  if (cartStore.items.length === 0) return alert('Tu carrito está vacío.')
+  if (cartStore.items.length === 0) return toast.error('Tu carrito está vacío.')
   procesando.value = true
+
+  // Guardamos el cupón antes de limpiar el carrito
+  const appliedCouponId = cartStore.appliedCoupon?.id
+
   try {
     const pedidoParaGuardar = {
       nombre_cliente: cliente.value.nombre,
       telefono_cliente: cliente.value.telefono,
       metodo_entrega: metodoEntrega.value,
       direccion_envio: metodoEntrega.value === 'envio' ? direccion.value : null,
-      total: cartStore.totalPrice,
+      total: cartStore.finalTotal, // Usamos el total final con descuento
       estado: 'verificando_pago',
       latitud: metodoEntrega.value === 'envio' ? markerLatLng.value[0] : null,
       longitud: metodoEntrega.value === 'envio' ? markerLatLng.value[1] : null,
@@ -101,27 +161,37 @@ async function procesarPedido() {
     const { data: pedidoData, error: pedidoError } = await supabase.from('pedidos').insert(pedidoParaGuardar).select('id').single()
     if (pedidoError) throw pedidoError
     const pedidoId = pedidoData.id
+
     const detallesPedido = cartStore.items.map(item => ({
       pedido_id: pedidoId,
       producto_id: item.id,
       cantidad: item.quantity,
       precio_unitario: item.precio,
     }))
+
     const { error: detallesError } = await supabase.from('detalles_pedido').insert(detallesPedido)
     if (detallesError) throw detallesError
+
     const { error: pagoError } = await supabase.from('pagos').insert({
       pedido_id: pedidoId,
       nro_referencia: pago.value.referencia,
       fecha: pago.value.fecha,
       banco_emisor: pago.value.banco_emisor,
-      monto: pago.value.monto,
+      monto: cartStore.finalTotal, // Guardamos el monto final
     })
     if (pagoError) throw pagoError
+
+    // Si se usó un cupón, incrementamos su contador de uso
+    if (appliedCouponId) {
+      const { incrementCouponUsage } = await import('@/services/couponService')
+      await incrementCouponUsage(appliedCouponId)
+    }
+    // Limpiamos el carrito
     cartStore.clearCart()
+
     router.push(`/confirmation/${pedidoId}`)
   } catch (error) {
-    console.error('Error al procesar el pedido:', error)
-    alert('Hubo un error al procesar tu pedido. Por favor, intenta de nuevo.')
+    toast.error('Hubo un error al procesar tu pedido.')
   } finally {
     procesando.value = false
   }
@@ -138,9 +208,8 @@ async function procesarPedido() {
           <div class="space-y-4">
             <input v-model="cliente.nombre" type="text" placeholder="Nombre y Apellido" required
               class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none">
-            <input v-model="cliente.telefono" type="tel" placeholder="Número de Teléfono"
-             required maxlength="20"
-             class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none">
+            <input v-model="cliente.telefono" type="tel" placeholder="Número de Teléfono" required maxlength="20"
+              class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none">
           </div>
         </div>
         <div class="bg-white p-6 rounded-lg shadow-md">
@@ -188,12 +257,23 @@ async function procesarPedido() {
           <div class="space-y-4">
             <input v-model="pago.referencia" type="number" inputmode="numeric" placeholder="Nro. de Referencia" required
               class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none">
-            <input v-model="pago.banco_emisor" type="text" placeholder="Banco Emisor" required
-              class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none">
-            <input v-model="pago.fecha" type="date" required
-              class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none">
-            <input v-model="pago.monto" type="number" step="0.01" placeholder="Monto Exacto" required
-              class="w-full p-2 border rounded-md bg-gray-100" readonly>
+            <label class="block">
+              <span class="text-gray-700 font-medium text-sm">Banco Emisor</span>
+              <select v-model="pago.banco_emisor" required
+                class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50">
+                <option value="" disabled selected>Selecciona un banco</option>
+                <option v-for="banco in bancos" :key="banco.code" :value="`${banco.code} - ${banco.name}`">
+                  {{ banco.code }} - {{ banco.name }}
+                </option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-gray-700 font-medium text-sm">Fecha de la Transacción</span>
+              <input v-model="pago.fecha" type="date" required :max="maxDate"
+                class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50">
+            </label>
+            <input :value="cartStore.finalTotal.toFixed(2)" type="number" step="0.01" placeholder="Monto Exacto"
+              required class="w-full p-2 border rounded-md bg-gray-100" readonly>
           </div>
         </div>
       </div>
@@ -206,14 +286,43 @@ async function procesarPedido() {
               <span>${{ (item.precio * item.quantity).toFixed(2) }}</span>
             </li>
           </ul>
-          <div class="flex justify-between items-center mt-4 pt-4 border-t">
-            <p class="font-bold text-lg">Total a Pagar</p>
-            <p class="font-bold text-xl text-brand-fucsia">${{ cartStore.totalPrice.toFixed(2) }}</p>
+
+          <div class="border-t pt-4">
+            <a v-if="!cartStore.appliedCoupon" @click="showCouponInput = !showCouponInput"
+              class="text-sm text-brand-fucsia font-semibold cursor-pointer hover:underline">
+              ¿Tienes un cupón?
+            </a>
+            <Transition name="slide-fade">
+              <div v-if="showCouponInput && !cartStore.appliedCoupon" class="flex gap-2 mt-2">
+                <input v-model="couponCode" type="text" placeholder="Ingresa tu código"
+                  class="flex-grow p-2 border rounded-md text-sm">
+                <CustomButton @click.prevent="handleApplyCoupon">Aplicar</CustomButton>
+              </div>
+            </Transition>
           </div>
-          <button type="submit" :disabled="procesando"
-            class="w-full mt-6 bg-brand-fucsia text-white font-bold py-3 rounded-md disabled:bg-gray-400">
+
+          <div class="space-y-2 mt-4 pt-4 border-t">
+            <div class="flex justify-between items-center">
+              <p class="text-gray-600">Subtotal</p>
+              <p class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</p>
+            </div>
+            <Transition name="fade">
+              <div v-if="cartStore.appliedCoupon" class="flex justify-between items-center text-green-600">
+                <p>Descuento ({{ cartStore.appliedCoupon.codigo }})
+                  <button @click="handleRemoveCoupon" class="text-red-500 hover:underline text-xs">(Quitar)</button>
+                </p>
+                <p class="font-semibold">-${{ cartStore.discountAmount.toFixed(2) }}</p>
+              </div>
+            </Transition>
+            <div class="flex justify-between items-center font-bold text-lg">
+              <p>Total a Pagar</p>
+              <p class="text-brand-fucsia text-xl">${{ cartStore.finalTotal.toFixed(2) }}</p>
+            </div>
+          </div>
+
+          <CustomButton type="submit" :disabled="procesando" class="w-full mt-6">
             {{ procesando ? 'Procesando...' : 'Finalizar Pedido' }}
-          </button>
+          </CustomButton>
         </div>
       </div>
     </form>

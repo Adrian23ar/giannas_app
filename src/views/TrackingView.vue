@@ -3,18 +3,13 @@ import { ref } from 'vue';
 import { useToast } from 'vue-toastification';
 import { findOrderById } from '@/services/orderService';
 import CustomButton from '@/components/CustomButton.vue';
+import { formatDisplayDate } from '@/utils/formatters.js'
 
 const toast = useToast();
 const orderId = ref('');
 const orderDetails = ref(null);
 const isLoading = ref(false);
 const errorMsg = ref('');
-
-function formatFecha(fecha) {
-  return new Date(fecha).toLocaleDateString('es-VE', {
-    year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
-  });
-}
 
 async function searchOrder() {
   if (!orderId.value) {
@@ -54,7 +49,7 @@ async function searchOrder() {
 
     <div v-if="orderDetails" class="max-w-2xl mx-auto mt-8 bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-2xl font-bold">Detalles del Pedido #{{ orderDetails.id }}</h2>
-      <p class="text-sm text-gray-500">Realizado el: {{ formatFecha(orderDetails.created_at) }}</p>
+      <p class="text-sm text-gray-500">Realizado el: {{ formatDisplayDate(orderDetails.created_at) }}</p>
 
       <div class="mt-4">
         <p class="font-semibold">Estado actual:</p>
