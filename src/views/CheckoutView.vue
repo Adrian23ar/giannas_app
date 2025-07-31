@@ -84,8 +84,6 @@ async function getUserLocation() {
   }
 }
 
-// ... el resto de tu código (<script> y <template>) permanece igual ...
-
 async function procesarPedido() {
   if (cartStore.items.length === 0) return alert('Tu carrito está vacío.')
   procesando.value = true

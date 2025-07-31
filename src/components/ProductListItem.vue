@@ -38,11 +38,11 @@ defineEmits(['edit', 'delete'])
       </div>
       <div class="flex gap-2">
         <button @click="$emit('edit', product)"
-          class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-md">
+          class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-md transition-all">
           <PencilSquareIcon class="h-5 w-5" />
         </button>
         <button @click="$emit('delete', product)"
-          class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-md">
+          class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-md transition-all">
           <TrashIcon class="h-5 w-5" />
         </button>
       </div>

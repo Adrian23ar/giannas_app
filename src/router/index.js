@@ -15,6 +15,7 @@ import CheckoutView from '../views/CheckoutView.vue'
 import OrderConfirmationView from '../views/OrderConfirmationView.vue'
 import AdminPedidosView from '../views/AdminPedidosView.vue'
 import TrackingView from '../views/TrackingView.vue'; // <-- Importa la nueva vista
+import AdminCuponesView from '../views/AdminCuponesView.vue'; // <-- Importa la nueva vista
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,7 +29,7 @@ const router = createRouter({
         { path: 'cart', name: 'cart', component: CartView },
         { path: 'checkout', name: 'checkout', component: CheckoutView },
         { path: 'confirmation/:orderId', name: 'confirmation', component: OrderConfirmationView },
-        { path: 'seguimiento', name: 'tracking', component: TrackingView }, // <-- AÑADE ESTA LÍNEA
+        { path: 'seguimiento', name: 'tracking', component: TrackingView },
       ],
     },
 
@@ -46,7 +47,8 @@ const router = createRouter({
         { path: '', name: 'admin-dashboard', component: AdminDashboardView },
         { path: 'productos', name: 'admin-productos', component: AdminProductosView },
         { path: 'categorias', name: 'admin-categorias', component: AdminCategoriasView },
-        { path: 'pedidos', name: 'admin-pedidos', component: AdminPedidosView }, // <-- AÑADE ESTA LÍNEA
+        { path: 'pedidos', name: 'admin-pedidos', component: AdminPedidosView },
+        { path: 'cupones', name: 'admin-cupones', component: AdminCuponesView },
 
       ],
     },

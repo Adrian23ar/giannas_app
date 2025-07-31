@@ -10,7 +10,8 @@ import {
   CubeIcon,
   TagIcon,
   XMarkIcon,
-  ShoppingCartIcon
+  ShoppingCartIcon,
+  TicketIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -76,6 +77,13 @@ watch(route, () => {
               <span v-if="isSidebarOpen">Pedidos</span>
             </RouterLink>
           </li>
+          <li>
+            <RouterLink to="/admin/cupones" class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
+              :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/cupones' }]">
+              <TicketIcon class="h-6 w-6 flex-shrink-0" />
+              <span v-if="isSidebarOpen">Cupones</span>
+            </RouterLink>
+          </li>
         </ul>
         <div class="p-4 border-t border-white/10">
           <button @click="handleLogout" class="w-full flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
@@ -94,7 +102,7 @@ watch(route, () => {
         </button>
         <h1 class="text-xl md:text-2xl font-bold text-gray-800">{{$route.name.split('-').map(w =>
           w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}}</h1>
-          <AdminNotificationBell />
+        <AdminNotificationBell />
 
       </header>
       <main class="p-4 md:p-6 max-w-6xl mx-auto">
