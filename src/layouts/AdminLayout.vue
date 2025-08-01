@@ -21,7 +21,7 @@ const isSidebarOpen = ref(window.innerWidth >= 768)
 
 async function handleLogout() {
   await supabase.auth.signOut()
-  router.push('/login')
+  router.push('/admin/login')
 }
 
 // Cierra el sidebar al cambiar de ruta en móvil

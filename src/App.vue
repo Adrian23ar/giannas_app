@@ -1,5 +1,15 @@
 <script setup>
+// src/App.vue
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
+import { useCartStore } from '@/stores/cartStore'
+
+const cartStore = useCartStore()
+
+// Al montar la aplicación, intentamos obtener la sesión del usuario
+onMounted(async () => {
+  await cartStore.initializeCart() // Luego inicializamos el carrito
+})
 </script>
 
 <template>

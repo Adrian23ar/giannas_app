@@ -1,20 +1,27 @@
 // src/services/productService.js
 import { supabase } from '../supabase'
 
-/**
-* Obtiene todos los productos con la información de su categoría.
-*/
-export const getProductsWithCategory = async () => {
+
+// Esta función ahora será para el catálogo del cliente
+export const getActiveProductsWithCategory = async () => {
   const { data, error } = await supabase
     .from('productos')
     .select(`*, categorias (nombre)`)
+    .eq('activo', true) // <-- AÑADIMOS ESTA LÍNEA
     .order('nombre', { ascending: true })
 
-  if (error) {
-    console.error('Error al obtener productos:', error.message)
-    throw error
-  }
+  if (error) throw error
   return data
+}
+
+// Dejamos la función original para usarla en el panel de admin
+export const getAllProductsWithCategory = async () => {
+    const { data, error } = await supabase
+        .from('productos')
+        .select(`*, categorias (nombre)`)
+        .order('nombre', { ascending: true })
+    if (error) throw error
+    return data
 }
 
 /**
@@ -93,16 +100,48 @@ export const updateProduct = async (productId, productData, newImageFile, oldIma
 }
 
 /**
-* Elimina un producto, incluyendo su imagen del storage.
-* @param {object} product - El objeto completo del producto a eliminar.
-*/
-export const deleteProduct = async (product) => {
-  // 1. Borrar imagen del Storage
-  const fileName = product.foto_url.split('/').pop()
-  await supabase.storage.from('imagenes-productos').remove([`public/${fileName}`])
-
-  // 2. Borrar producto de la base de datos
-  const { error } = await supabase.from('productos').delete().eq('id', product.id)
+ * Cambia el estado de un producto (activo/inactivo).
+ * @param {number} productId - El ID del producto.
+ * @param {boolean} currentStatus - El estado actual del producto.
+ */
+export const toggleProductStatus = async (productId, currentStatus) => {
+  // NO borramos la imagen, solo desactivamos el producto
+  const { data, error } = await supabase
+    .from('productos')
+    .update({ activo: !currentStatus })
+    .eq('id', productId)
+    .select()
+    .single()
 
   if (error) throw error
+  return data
+}
+
+/**
+ * Calcula estadísticas de inventario (Total, Valor, Bajo Stock).
+ * @param {Array} products - Una lista de productos para calcular las estadísticas.
+ * @returns {object} - Un objeto con las estadísticas calculadas.
+ */
+export const calculateProductStats = (products) => {
+  if (!products || products.length === 0) {
+    return {
+      totalProducts: 0,
+      inventoryValue: 0,
+      lowStockCount: 0,
+    }
+  }
+
+  const totalProducts = products.length
+
+  const inventoryValue = products.reduce((total, product) => {
+    return total + (product.precio * product.stock)
+  }, 0)
+
+  const lowStockCount = products.filter(product => product.stock < 5).length
+
+  return {
+    totalProducts,
+    inventoryValue,
+    lowStockCount,
+  }
 }

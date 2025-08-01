@@ -1,17 +1,17 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-// Importaciones de nuestro nuevo servicio
-import { getProductsWithCategory, createProduct, updateProduct, deleteProduct } from '@/services/productService'
+// src/views/AdminProductosView.vue
+import { ref, onMounted } from 'vue' // <-- Añadimos computed
+import { getAllProductsWithCategory, createProduct, updateProduct, toggleProductStatus, calculateProductStats } from '@/services/productService'
 import { supabase } from '../supabase'
 
 // Importaciones de componentes e íconos...
+import StatCard from '@/components/StatCard.vue' // <-- Nuevo
 import CustomButton from '@/components/CustomButton.vue'
 import EmptyState from '@/components/EmptyState.vue';
 import ProductListItem from '@/components/ProductListItem.vue'
-import { PlusIcon, PencilSquareIcon, XCircleIcon, CubeIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { PlusIcon, PencilSquareIcon, XCircleIcon, CubeIcon, ChevronDownIcon, BanknotesIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
 import SkeletonLoader from '@/components/SkeletonLoader.vue';
 import { useToast } from 'vue-toastification'
-import ConfirmModal from '@/components/ConfirmModal.vue' // <-- Importamos el modal
 
 const toast = useToast()
 // --- ESTADO DE LA VISTA ---
@@ -24,22 +24,26 @@ const formAbierto = ref(false)
 const nuevoProducto = ref({ nombre: '', descripcion: '', precio: 0, stock: 0, categoria_id: null })
 const archivoImagen = ref(null)
 
-// --- ESTADO PARA MODAL DE CONFIRMACIÓN ---
-const showConfirmModal = ref(false)
-const productToDelete = ref(null)
+// --- ESTADO PARA LAS ESTADÍSTICAS ---
+const stats = ref({
+  totalProducts: 0,
+  inventoryValue: 0,
+  lowStockCount: 0,
+})
 
 // --- LÓGICA ---
 async function obtenerDatosIniciales() {
+  cargando.value = true
   try {
-    cargando.value = true
-    // Obtenemos categorías (esto lo moveremos a su propio servicio después)
     const { data: cats } = await supabase.from('categorias').select('id, nombre')
     categorias.value = cats
 
-    // Usamos nuestro nuevo servicio para obtener los productos
-    productos.value = await getProductsWithCategory()
+    const productList = await getAllProductsWithCategory()
+    productos.value = productList
+    // Calculamos las estadísticas con la lista de productos obtenida
+    stats.value = calculateProductStats(productList)
   } catch (error) {
-    alert(error || 'Error al cargar los datos iniciales.')
+    toast.error('Error al cargar los datos iniciales.')
   } finally {
     cargando.value = false
   }
@@ -63,7 +67,6 @@ function resetearFormulario() {
 async function guardarProducto() {
   try {
     if (modoEdicion.value) {
-      // Usamos el servicio de actualización
       const dataActualizado = await updateProduct(
         productoAEditar.value.id,
         nuevoProducto.value,
@@ -73,37 +76,28 @@ async function guardarProducto() {
       const index = productos.value.findIndex(p => p.id === dataActualizado.id)
       if (index !== -1) productos.value[index] = dataActualizado
     } else {
-      // Usamos el servicio de creación
       const nuevo = await createProduct(nuevoProducto.value, archivoImagen.value)
       productos.value.push(nuevo)
     }
+    stats.value = calculateProductStats(productos.value)
     toast.success(modoEdicion.value ? '¡Producto actualizado!' : '¡Producto creado con éxito!')
     resetearFormulario()
   } catch (error) {
+    console.log(error);
     toast.error('Ocurrió un error al guardar el producto.')
   }
 }
 
-// --- LÓGICA DE ELIMINACIÓN ACTUALIZADA ---
-
-// 1. Esta función abre el modal
-function promptEliminarProducto(producto) {
-  productToDelete.value = producto
-  showConfirmModal.value = true
-}
-
-// 2. Esta función se ejecuta si el usuario confirma en el modal
-async function handleEliminarProducto() {
-  if (!productToDelete.value) return
+async function handleToggleStatus(producto) {
   try {
-    await deleteProduct(productToDelete.value)
-    productos.value = productos.value.filter(p => p.id !== productToDelete.value.id)
-    toast.success(`Producto "${productToDelete.value.nombre}" eliminado.`)
+    const productoActualizado = await toggleProductStatus(producto.id, producto.activo)
+    const index = productos.value.findIndex(p => p.id === producto.id)
+    if (index !== -1) {
+      productos.value[index] = productoActualizado
+    }
+    toast.success(`Producto ${productoActualizado.activo ? 'activado' : 'desactivado'}.`)
   } catch (error) {
-    toast.error('Ocurrió un error al eliminar el producto.')
-  } finally {
-    showConfirmModal.value = false
-    productToDelete.value = null
+    toast.error('Error al cambiar el estado del producto.')
   }
 }
 
@@ -126,12 +120,28 @@ onMounted(obtenerDatosIniciales)
 
 <template>
   <div>
+    <div v-if="productos.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <StatCard title="Total Productos" :value="stats.totalProducts" bgColorClass="bg-blue-100"
+        iconColorClass="text-blue-600">
+        <CubeIcon class="h-6 w-6" />
+      </StatCard>
+      <StatCard title="Valor Inventario" :value="`$${stats.inventoryValue.toFixed(2)}`" bgColorClass="bg-green-100"
+        iconColorClass="text-green-600">
+        <BanknotesIcon class="h-6 w-6" />
+      </StatCard>
+      <StatCard title="Bajo Stock (<5)" :value="stats.lowStockCount" bgColorClass="bg-red-100"
+        iconColorClass="text-red-600">
+        <ExclamationTriangleIcon class="h-6 w-6" />
+      </StatCard>
+    </div>
     <div class="mt-6 bg-white rounded-lg shadow-md">
+
       <button @click="formAbierto = !formAbierto"
         class="w-full flex justify-between items-center p-4 font-bold text-lg text-white bg-brand-fucsia rounded-t-lg">
         <span>{{ modoEdicion ? 'Editando Producto Existente' : '+ Añadir Nuevo Producto' }}</span>
         <ChevronDownIcon class="h-6 w-6 transition-transform" :class="formAbierto && 'rotate-180'" />
       </button>
+
 
       <Transition name="slide-fade">
         <form v-if="formAbierto" @submit.prevent="guardarProducto" class="p-6 space-y-6">
@@ -202,7 +212,7 @@ onMounted(obtenerDatosIniciales)
       </div>
       <ul v-else-if="productos.length > 0" class="space-y-4">
         <ProductListItem v-for="producto in productos" :key="producto.id" :product="producto" @edit="iniciarEdicion"
-          @delete="promptEliminarProducto" />
+         @toggleStatus="handleToggleStatus" />
       </ul>
       <EmptyState v-else title="Aún no hay productos"
         message="Empieza añadiendo tu primer producto para que aparezca aquí.">
@@ -218,13 +228,6 @@ onMounted(obtenerDatosIniciales)
       </EmptyState>
     </div>
   </div>
-  <ConfirmModal
-      :show="showConfirmModal"
-      title="Confirmar Eliminación de Producto"
-      :message="`¿Estás seguro de que quieres eliminar '${productToDelete?.nombre}'? Esta acción es permanente.`"
-      @confirm="handleEliminarProducto"
-      @cancel="showConfirmModal = false"
-    />
 </template>
 
 <style scoped>

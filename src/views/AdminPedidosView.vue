@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, Transition } from 'vue'
 // Importamos las funciones de nuestro nuevo servicio
 import { getOrders, getOrderDetails, updateOrderStatus } from '@/services/orderService'
 import { formatDisplayDate } from '@/utils/formatters.js'
@@ -123,59 +123,60 @@ onMounted(obtenerPedidos)
         </tbody>
       </table>
     </div>
+    <Transition name="fade">
+      <div v-if="modalActivo" class="fixed inset-0 bg-black/50 flex justify-center items-center z-30">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div class="p-6 border-b sticky top-0 bg-white z-10">
+            <h2 class="text-2xl font-bold">Detalles del Pedido #{{ pedidoSeleccionado.id }}</h2>
+            <button @click="modalActivo = false"
+              class="absolute top-5 right-5 text-3xl text-gray-500 hover:text-gray-800 transition-colors">×</button>
+          </div>
+          <div v-if="pedidoSeleccionado" class="p-6 space-y-6">
+            <section>
+              <h3 class="font-bold mb-2">Datos del Cliente y Entrega</h3>
+              <p><strong>Nombre:</strong> {{ pedidoSeleccionado.nombre_cliente }}</p>
+              <p><strong>Teléfono:</strong> {{ pedidoSeleccionado.telefono_cliente }}</p>
+              <p><strong>Método:</strong> {{ pedidoSeleccionado.metodo_entrega }}</p>
+              <div v-if="pedidoSeleccionado.metodo_entrega === 'envio'">
+                <p><strong>Referencia:</strong> {{ pedidoSeleccionado.direccion_envio }}</p>
+                <a v-if="pedidoSeleccionado.latitud && pedidoSeleccionado.longitud" :href="enlaceMapa" target="_blank"
+                  class="text-blue-600 hover:underline">Ver ubicación en mapa</a>
+                <p v-else class="text-sm text-gray-400 italic">Ubicación no disponible</p>
+              </div>
+            </section>
+            <section>
+              <h3 class="font-bold mb-2">Detalles del Pago</h3>
+              <p><strong>Referencia:</strong> {{ pedidoSeleccionado.pagos[0]?.nro_referencia || 'N/A' }}</p>
+              <p><strong>Banco Emisor:</strong> {{ pedidoSeleccionado.pagos[0]?.banco_emisor || 'N/A' }}</p>
+              <p><strong>Fecha:</strong> {{ formatDisplayDate(pedidoSeleccionado.pagos[0]?.fecha) }}</p>
 
-    <div v-if="modalActivo" class="fixed inset-0 bg-black/50 flex justify-center items-center z-30">
-      <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div class="p-6 border-b sticky top-0 bg-white z-10">
-          <h2 class="text-2xl font-bold">Detalles del Pedido #{{ pedidoSeleccionado.id }}</h2>
-          <button @click="modalActivo = false"
-            class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">×</button>
-        </div>
-        <div v-if="pedidoSeleccionado" class="p-6 space-y-6">
-          <section>
-            <h3 class="font-bold mb-2">Datos del Cliente y Entrega</h3>
-            <p><strong>Nombre:</strong> {{ pedidoSeleccionado.nombre_cliente }}</p>
-            <p><strong>Teléfono:</strong> {{ pedidoSeleccionado.telefono_cliente }}</p>
-            <p><strong>Método:</strong> {{ pedidoSeleccionado.metodo_entrega }}</p>
-            <div v-if="pedidoSeleccionado.metodo_entrega === 'envio'">
-              <p><strong>Referencia:</strong> {{ pedidoSeleccionado.direccion_envio }}</p>
-              <a v-if="pedidoSeleccionado.latitud && pedidoSeleccionado.longitud" :href="enlaceMapa" target="_blank"
-                class="text-blue-600 hover:underline">Ver ubicación en mapa</a>
-              <p v-else class="text-sm text-gray-400 italic">Ubicación no disponible</p>
-            </div>
-          </section>
-          <section>
-            <h3 class="font-bold mb-2">Detalles del Pago</h3>
-            <p><strong>Referencia:</strong> {{ pedidoSeleccionado.pagos[0]?.nro_referencia || 'N/A' }}</p>
-            <p><strong>Banco Emisor:</strong> {{ pedidoSeleccionado.pagos[0]?.banco_emisor || 'N/A' }}</p>
-            <p><strong>Fecha:</strong> {{ formatDisplayDate(pedidoSeleccionado.pagos[0]?.fecha) }}</p>
-
-            <p><strong>Monto:</strong> ${{ pedidoSeleccionado.pagos[0]?.monto.toFixed(2) || '0.00' }}</p>
-          </section>
-          <section>
-            <h3 class="font-bold mb-2">Productos Ordenados</h3>
-            <ul>
-              <li v-for="detalle in pedidoSeleccionado.detalles_pedido" :key="detalle.producto_id"
-                class="flex justify-between border-b py-1">
-                <span>{{ detalle.productos.nombre }} x {{ detalle.cantidad }}</span>
-                <span>${{ (detalle.precio_unitario * detalle.cantidad).toFixed(2) }}</span>
-              </li>
-            </ul>
-            <p class="text-right font-bold mt-2">Total: ${{ pedidoSeleccionado.total.toFixed(2) }}</p>
-          </section>
-          <section class="border-t pt-4 flex items-center gap-4">
-            <label for="estado" class="font-bold">Actualizar Estado:</label>
-            <select v-model="pedidoSeleccionado.estado" id="estado" class="p-2 border rounded-md">
-              <option value="verificando_pago">Verificando Pago</option>
-              <option value="en_preparacion">En Preparación</option>
-              <option value="listo_para_entrega">Listo para Entrega</option>
-              <option value="completado">Completado</option>
-              <option value="cancelado">Cancelado</option>
-            </select>
-            <CustomButton @click="actualizarEstado">Actualizar</CustomButton>
-          </section>
+              <p><strong>Monto:</strong> ${{ pedidoSeleccionado.pagos[0]?.monto.toFixed(2) || '0.00' }}</p>
+            </section>
+            <section>
+              <h3 class="font-bold mb-2">Productos Ordenados</h3>
+              <ul>
+                <li v-for="detalle in pedidoSeleccionado.detalles_pedido" :key="detalle.producto_id"
+                  class="flex justify-between border-b py-1">
+                  <span>{{ detalle.productos.nombre }} x {{ detalle.cantidad }}</span>
+                  <span>${{ (detalle.precio_unitario * detalle.cantidad).toFixed(2) }}</span>
+                </li>
+              </ul>
+              <p class="text-right font-bold mt-2">Total: ${{ pedidoSeleccionado.total.toFixed(2) }}</p>
+            </section>
+            <section class="border-t pt-4 flex items-center gap-4">
+              <label for="estado" class="font-bold">Actualizar Estado:</label>
+              <select v-model="pedidoSeleccionado.estado" id="estado" class="p-2 border rounded-md">
+                <option value="verificando_pago">Verificando Pago</option>
+                <option value="en_preparacion">En Preparación</option>
+                <option value="listo_para_entrega">Listo para Entrega</option>
+                <option value="completado">Completado</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+              <CustomButton @click="actualizarEstado">Actualizar</CustomButton>
+            </section>
+          </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </div>
 </template>

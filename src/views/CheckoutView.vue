@@ -1,8 +1,9 @@
 <script setup>
 // src/views/CheckoutView.vue
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cartStore'
+import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'vue-toastification'
 import { supabase } from '../supabase'
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet"
@@ -10,6 +11,7 @@ import L from 'leaflet'
 import CustomButton from '@/components/CustomButton.vue'
 
 const cartStore = useCartStore()
+const userStore = useUserStore()
 const router = useRouter()
 const toast = useToast()
 
@@ -65,6 +67,14 @@ const bancos = ref([
   { code: "0177", name: "BANFANB" },
   { code: "0191", name: "BANCO NACIONAL DE CREDITO" }
 ]);
+
+// --- 3. Lógica para autorellenar ---
+onMounted(() => {
+  if (userStore.isLoggedIn) {
+    cliente.value.nombre = userStore.userFullName;
+    cliente.value.telefono = userStore.userPhone;
+  }
+})
 
 function onMarkerDragEnd(event) {
   markerLatLng.value = [event.target.getLatLng().lat, event.target.getLatLng().lng]
@@ -146,9 +156,11 @@ async function procesarPedido() {
 
   // Guardamos el cupón antes de limpiar el carrito
   const appliedCouponId = cartStore.appliedCoupon?.id
+  const orderUserId = userStore.isLoggedIn ? userStore.user.id : null // <-- Guardamos el ID del usuario
 
   try {
     const pedidoParaGuardar = {
+      user_id: orderUserId,
       nombre_cliente: cliente.value.nombre,
       telefono_cliente: cliente.value.telefono,
       metodo_entrega: metodoEntrega.value,
@@ -207,17 +219,22 @@ async function procesarPedido() {
           <h2 class="text-2xl font-bold mb-4">1. Tus Datos</h2>
           <div class="space-y-4">
             <input v-model="cliente.nombre" type="text" placeholder="Nombre y Apellido" required
-              class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none">
+              class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none"
+              :disabled="userStore.isLoggedIn" :class="{ 'bg-gray-100': userStore.isLoggedIn }">
             <input v-model="cliente.telefono" type="tel" placeholder="Número de Teléfono" required maxlength="20"
-              class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none">
+              class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none"
+              :disabled="userStore.isLoggedIn" :class="{ 'bg-gray-100': userStore.isLoggedIn }">
           </div>
+           <p v-if="userStore.isLoggedIn" class="text-xs text-gray-500 mt-2">
+            Estos datos se toman de tu cuenta. Para modificarlos, ve a "Mi Cuenta".
+          </p>
         </div>
         <div class="bg-white p-6 rounded-lg shadow-md">
           <h2 class="text-2xl font-bold mb-4">2. Método de Entrega</h2>
           <div class="space-y-2">
             <label class="flex items-center gap-2 p-3 border rounded-md cursor-pointer">
               <input type="radio" v-model="metodoEntrega" value="recogida" name="entrega" class="accent-brand-fucsia">
-              Recogida en tienda
+              Retiro personal
             </label>
             <label class="flex items-center gap-2 p-3 border rounded-md cursor-pointer">
               <input type="radio" v-model="metodoEntrega" value="envio" name="entrega" class="accent-brand-fucsia">

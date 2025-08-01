@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { supabase } from '../supabase'
 import { useCartStore } from '@/stores/cartStore'
+import { getActiveProductsWithCategory } from '@/services/productService'
 
 const cartStore = useCartStore() // Usamos nuestro store del carrito
 const productos = ref([])
@@ -10,15 +11,10 @@ const cargando = ref(true)
 async function obtenerProductos() {
   try {
     cargando.value = true
-    const { data, error } = await supabase
-      .from('productos')
-      .select('*')
-      .order('nombre', { ascending: true })
-
-    if (error) throw error
-    productos.value = data
+    productos.value = await getActiveProductsWithCategory()
   } catch (error) {
     console.error('Error al obtener productos:', error)
+    // Aquí podrías usar un toast para notificar al usuario
   } finally {
     cargando.value = false
   }

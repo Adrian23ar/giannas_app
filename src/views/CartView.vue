@@ -15,7 +15,7 @@ function orderViaWhatsApp() {
   }).join('\n'); // El '\n' crea un salto de línea
 
   // Creamos el mensaje completo
-  const message = `¡Hola Gianna's Cookies!\n\nQuisiera hacer el siguiente pedido:\n\n${productList}\n\n*Total: $${cartStore.totalPrice.toFixed(2)}*\n\n¡Gracias!`;
+  const message = `¡Hola Gianna's Cookies!\n\nQuisiera hacer el siguiente pedido:\n\n${productList}\n\n*Total: $${cartStore.subtotal.toFixed(2)}*\n\n¡Gracias!`;
 
   // Codificamos el mensaje para que sea seguro en una URL
   const encodedMessage = encodeURIComponent(message);

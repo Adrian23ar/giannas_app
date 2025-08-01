@@ -1,7 +1,10 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
 import { useCartStore } from '@/stores/cartStore'
+import { useUserStore } from '@/stores/userStore' // Importamos el userStore
+
 const cartStore = useCartStore()
+const userStore = useUserStore() // Usamos el userStore
 </script>
 
 <template>
@@ -13,8 +16,21 @@ const cartStore = useCartStore()
         </RouterLink>
 
         <div class="flex items-center gap-6">
-          <RouterLink to="/seguimiento" class="text-gray-700 hover:text-brand-fucsia font-medium">Seguimiento</RouterLink>
           <RouterLink to="/" class="text-gray-700 hover:text-brand-fucsia font-medium">Catálogo</RouterLink>
+          <RouterLink to="/seguimiento" class="text-gray-700 hover:text-brand-fucsia font-medium">Seguimiento
+          </RouterLink>
+
+          <template v-if="!userStore.isLoggedIn">
+            <RouterLink to="/ingresar" class="text-gray-700 hover:text-brand-fucsia font-medium">Iniciar Sesión
+            </RouterLink>
+          </template>
+
+          <template v-else>
+            <RouterLink to="/mi-cuenta" class="text-gray-700 hover:text-brand-fucsia font-medium">Mi Cuenta</RouterLink>
+            <button @click="userStore.signOut" class="text-gray-700 hover:text-brand-fucsia font-medium">Cerrar
+              Sesión</button>
+          </template>
+
           <RouterLink to="/cart" class="relative text-gray-700 hover:text-brand-fucsia font-medium">
             <span>Carrito</span>
             <span

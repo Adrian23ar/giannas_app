@@ -10,7 +10,7 @@ defineProps({
 })
 
 // Define los eventos que este componente puede "emitir" hacia el padre
-defineEmits(['edit', 'delete'])
+defineEmits(['edit', 'toggleStatus'])
 </script>
 
 <template>
@@ -37,14 +37,20 @@ defineEmits(['edit', 'delete'])
         <p class="font-bold text-gray-700">${{ product.precio.toFixed(2) }}</p>
       </div>
       <div class="flex gap-2">
+        <label class="flex items-center cursor-pointer">
+          <div class="relative">
+            <input type="checkbox" :checked="product.activo" @change="$emit('toggleStatus', product)"
+              class="sr-only peer">
+            <div
+              class="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-fucsia">
+            </div>
+          </div>
+        </label>
         <button @click="$emit('edit', product)"
           class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-md transition-all">
           <PencilSquareIcon class="h-5 w-5" />
         </button>
-        <button @click="$emit('delete', product)"
-          class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-md transition-all">
-          <TrashIcon class="h-5 w-5" />
-        </button>
+
       </div>
     </div>
   </li>

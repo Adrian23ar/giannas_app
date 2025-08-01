@@ -1,30 +1,49 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { supabase } from '../supabase'
+import { useToast } from 'vue-toastification'
+import { supabase } from '@/supabase'
+import { useUserStore } from '@/stores/userStore'
 
 const router = useRouter()
+const toast = useToast()
+const userStore = useUserStore()
 const email = ref('')
 const password = ref('')
-const errorMsg = ref('')
+const procesando = ref(false)
 
 async function handleLogin() {
+  procesando.value = true
   try {
-    // Limpiamos el mensaje de error anterior
-    errorMsg.value = ''
-
-    // Ya no declaramos 'data' porque no la usamos
-    const { error } = await supabase.auth.signInWithPassword({
+    // 1. Inicia sesión como siempre
+    const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.value,
       password: password.value,
     })
-    if (error) throw error
+    if (signInError) throw new Error('Credenciales incorrectas.');
 
-    router.push('/admin')
+    // 2. Busca el perfil para verificar el rol
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    // 3. Verifica si el rol es 'admin'
+    if (profile && profile.role === 'admin') {
+      await userStore.fetchUser() // Actualiza el store con los datos del admin
+      router.push('/admin')
+      toast.success('¡Bienvenido, Administrador!')
+    } else {
+      // Si no es admin, cierra la sesión recién creada y muestra un error
+      await supabase.auth.signOut()
+      throw new Error('No tienes permiso para acceder a esta área.')
+    }
+
   } catch (error) {
-    // Ahora usamos el mensaje de error real que nos da Supabase
-    console.error('Error de login:', error.message) // Para verlo en la consola
-    errorMsg.value = error.message || 'Email o contraseña incorrectos.'
+    toast.error(error.message)
+  } finally {
+    procesando.value = false
   }
 }
 </script>
@@ -45,7 +64,6 @@ async function handleLogin() {
           <label for="password" class="block text-gray-700">Contraseña</label>
           <input type="password" v-model="password" id="password" class="w-full p-2 border rounded-md">
         </div>
-        <div v-if="errorMsg" class="text-red-500 text-center mb-4">{{ errorMsg }}</div>
         <button type="submit" class="w-full bg-brand-fucsia text-white font-bold py-3 rounded-md">
           Iniciar Sesión
         </button>

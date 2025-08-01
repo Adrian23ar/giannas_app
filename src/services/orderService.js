@@ -18,6 +18,26 @@ export const getOrders = async () => {
 }
 
 /**
+ * Obtiene todos los pedidos realizados por un usuario específico.
+ * @param {string} userId - El ID del usuario de Supabase.
+ */
+export const getOrdersByUserId = async (userId) => {
+  if (!userId) return [];
+
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error al obtener los pedidos del usuario:', error.message);
+    throw error;
+  }
+  return data;
+}
+
+/**
  * Obtiene los detalles completos de un único pedido, incluyendo
  * los productos ordenados y la información del pago.
  * @param {number} orderId - El ID del pedido a buscar.
