@@ -119,7 +119,7 @@ onMounted(obtenerCategorias)
     <div class="bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-xl font-semibold mb-4 text-gray-700">Categorías Existentes</h2>
       <div v-if="cargando" class="space-y-3">
-        <SkeletonLoader v-for="n in 3" :key="n" class="h-12 w-full" />
+        <SkeletonLoader v-for="n in 3" :key="n" class="h-14 w-full" />
       </div>
       <ul v-else-if="categorias.length > 0" class="space-y-3">
         <CategoryListItem v-for="categoria in categorias" :key="categoria.id" :category="categoria"

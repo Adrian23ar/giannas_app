@@ -9,6 +9,7 @@ import { supabase } from '../supabase'
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet"
 import CustomButton from '@/components/CustomButton.vue'
 import { paymentMethodService } from '@/services/paymentMethodService' // <-- 1. IMPORTAR SERVICIO
+import { incrementCouponUsage } from '@/services/couponService' // <-- AÑADE ESTA LÍNEA
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
@@ -220,7 +221,6 @@ async function procesarPedido() {
     if (pagoError) throw pagoError
 
     if (appliedCouponId) {
-      const { incrementCouponUsage } = await import('@/services/couponService')
       await incrementCouponUsage(appliedCouponId)
     }
     cartStore.clearCart()
@@ -363,7 +363,8 @@ async function procesarPedido() {
               <div v-if="showCouponInput && !cartStore.appliedCoupon" class="flex flex-col md:flex-row gap-2 mt-2">
                 <input v-model="couponCode" type="text" placeholder="Ingresa tu código"
                   class="flex-grow p-2 border rounded-md text-sm">
-                <CustomButton @click.prevent="handleApplyCoupon" :disabled="isLoading">{{ isLoading ? 'Aplicando...' : 'Aplicar' }}</CustomButton>
+                <CustomButton @click.prevent="handleApplyCoupon" :disabled="isLoading">{{ isLoading ? 'Aplicando...' :
+                  'Aplicar' }}</CustomButton>
               </div>
             </Transition>
           </div>

@@ -1,4 +1,5 @@
 <script setup>
+// src/views/LoginView.vue
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'

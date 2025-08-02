@@ -8,11 +8,13 @@ import CustomButton from '@/components/CustomButton.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import EditCouponModal from '@/components/EditCouponModal.vue' // <-- Nuevo
 import { PlusIcon, TrashIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
+import SkeletonLoader from '@/components/SkeletonLoader.vue'
 
 const toast = useToast()
 const cupones = ref([])
-const cargando = ref(true)
+const cargando = ref(false)
 const formAbierto = ref(false)
+
 
 const nuevoCupon = ref({
   codigo: '',
@@ -173,16 +175,19 @@ onMounted(obtenerCupones)
           </div>
         </form>
       </Transition>
-
-
-      <div class="bg-white rounded-lg shadow-md">
+      <div v-if="cargando" v-for="n in 3" :key="n" class="bg-white rounded-lg shadow-md mb-4">
+        <div class="space-y-7 flex flex-col p-4">
+          <SkeletonLoader class="h-16 w-full" />
+        </div>
+      </div>
+      <div v-else class="bg-white rounded-lg shadow-md">
         <ul class="divide-y">
           <li v-for="cupon in cupones" :key="cupon.id"
             class="p-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
               <p class="font-bold text-lg" :class="!cupon.activo && 'text-gray-400 line-through'">{{ cupon.codigo }}</p>
               <p class="text-sm text-gray-600">Descuento de {{ cupon.valor }}{{ cupon.tipo === 'porcentaje' ? '%' : '$'
-                }}</p>
+              }}</p>
               <div class="text-xs text-gray-500 mt-2 space-x-4">
                 <span>Usos: {{ cupon.usos_actuales }} / {{ cupon.usos_maximos || '∞' }}</span>
                 <span v-if="cupon.fecha_expiracion">Expira: {{ formatDisplayDate(cupon.fecha_expiracion) }}</span>

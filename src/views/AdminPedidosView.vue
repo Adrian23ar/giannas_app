@@ -31,7 +31,6 @@ async function obtenerPedidos() {
 
 // Llama al servicio para obtener los detalles y mostrar el modal
 async function mostrarDetalles(pedido) {
-  console.log(pedido);
   try {
     pedidoSeleccionado.value = await getOrderDetails(pedido.id)
     modalActivo.value = true

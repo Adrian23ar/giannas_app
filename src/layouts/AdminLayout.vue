@@ -114,7 +114,11 @@ watch(route, () => {
 
       </header>
       <main class="p-4 md:p-6 max-w-6xl mx-auto">
-        <RouterView />
+        <RouterView v-slot="{ Component }">
+        <Transition name="fade" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </RouterView>
       </main>
     </div>
   </div>

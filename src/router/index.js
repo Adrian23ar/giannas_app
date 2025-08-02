@@ -1,28 +1,11 @@
 // src/router/index.js
 
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores/userStore' // <-- Importa el userStore
+import { useUserStore } from '@/stores/userStore'
 
-// Importamos todos los layouts y vistas que usaremos
+// Los Layouts se pueden mantener con importación estática, ya que son la base
 import AdminLayout from '../layouts/AdminLayout.vue'
 import ClientLayout from '../layouts/ClientLayout.vue'
-import AdminLoginView from '../views/LoginView.vue' // Login del Administrador
-import AdminDashboardView from '../views/AdminDashboardView.vue'
-import AdminProductosView from '../views/AdminProductosView.vue'
-import AdminCategoriasView from '../views/AdminCategoriasView.vue'
-import AdminPaymentsView from '../views/AdminPaymentsView.vue'; // <-- AÑADE ESTA LÍNEA
-import CatalogView from '../views/CatalogView.vue'
-import CartView from '../views/CartView.vue'
-import CheckoutView from '../views/CheckoutView.vue'
-import OrderConfirmationView from '../views/OrderConfirmationView.vue'
-import AdminPedidosView from '../views/AdminPedidosView.vue'
-import TrackingView from '../views/TrackingView.vue';
-import AdminCuponesView from '../views/AdminCuponesView.vue';
-import ClientLoginView from '../views/ClientLoginView.vue'
-import ClientRegisterView from '../views/ClientRegisterView.vue'
-import ForgotPasswordView from '../views/ForgotPasswordView.vue'
-import UpdatePasswordView from '../views/UpdatePasswordView.vue'
-import AccountView from '../views/AccountView.vue'; // <-- Panel de usuario cliente
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -32,17 +15,18 @@ const router = createRouter({
       path: '/',
       component: ClientLayout,
       children: [
-        { path: '', name: 'catalog', component: CatalogView },
-        { path: 'cart', name: 'cart', component: CartView },
-        { path: 'checkout', name: 'checkout', component: CheckoutView },
-        { path: 'confirmation/:orderId', name: 'confirmation', component: OrderConfirmationView },
-        { path: 'seguimiento', name: 'tracking', component: TrackingView },
-        { path: 'ingresar', name: 'client-login', component: ClientLoginView },
-        { path: 'registro', name: 'client-register', component: ClientRegisterView },
-        { path: 'olvide-clave', name: 'forgot-password', component: ForgotPasswordView },
-        { path: 'actualizar-clave', name: 'update-password', component: UpdatePasswordView },
-        { path: 'mi-cuenta', name: 'account', component: AccountView },
-
+        // ✅ AQUÍ ESTÁ LA MAGIA: CADA VISTA SE CARGA BAJO DEMANDA
+        { path: '', name: 'catalog', component: () => import('../views/CatalogView.vue') },
+        { path: 'cart', name: 'cart', component: () => import('../views/CartView.vue') },
+        { path: 'checkout', name: 'checkout', component: () => import('../views/CheckoutView.vue') },
+        { path: 'confirmation/:orderId', name: 'confirmation', component: () => import('../views/OrderConfirmationView.vue') },
+        // La vista de seguimiento (con el mapa pesado) solo se cargará al visitar /seguimiento
+        { path: 'seguimiento', name: 'tracking', component: () => import('../views/TrackingView.vue') },
+        { path: 'ingresar', name: 'client-login', component: () => import('../views/ClientLoginView.vue') },
+        { path: 'registro', name: 'client-register', component: () => import('../views/ClientRegisterView.vue') },
+        { path: 'olvide-clave', name: 'forgot-password', component: () => import('../views/ForgotPasswordView.vue') },
+        { path: 'actualizar-clave', name: 'update-password', component: () => import('../views/UpdatePasswordView.vue') },
+        { path: 'mi-cuenta', name: 'account', component: () => import('../views/AccountView.vue') },
       ],
     },
 
@@ -50,25 +34,26 @@ const router = createRouter({
     {
       path: '/admin/login',
       name: 'admin-login',
-      component: AdminLoginView,
+      component: () => import('../views/LoginView.vue'), // También aplicamos lazy-loading aquí
     },
     {
       path: '/admin',
       component: AdminLayout,
       meta: { requiresAuth: true },
       children: [
-        { path: '', name: 'admin-dashboard', component: AdminDashboardView },
-        { path: 'productos', name: 'admin-productos', component: AdminProductosView },
-        { path: 'categorias', name: 'admin-categorias', component: AdminCategoriasView },
-        { path: 'pedidos', name: 'admin-pedidos', component: AdminPedidosView },
-        { path: 'cupones', name: 'admin-cupones', component: AdminCuponesView },
-        { path: 'metodos-pago', name: 'admin-metodos-pago', component: AdminPaymentsView },
-
+        // Chart.js y otras librerías de admin solo se cargarán al entrar a estas rutas
+        { path: '', name: 'admin-dashboard', component: () => import('../views/AdminDashboardView.vue') },
+        { path: 'productos', name: 'admin-productos', component: () => import('../views/AdminProductosView.vue') },
+        { path: 'categorias', name: 'admin-categorias', component: () => import('../views/AdminCategoriasView.vue') },
+        { path: 'pedidos', name: 'admin-pedidos', component: () => import('../views/AdminPedidosView.vue') },
+        { path: 'cupones', name: 'admin-cupones', component: () => import('../views/AdminCuponesView.vue') },
+        { path: 'metodos-pago', name: 'admin-metodos-pago', component: () => import('../views/AdminPaymentsView.vue') },
       ],
     },
   ],
 })
 
+// Tu lógica de router.beforeEach se mantiene exactamente igual...
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
