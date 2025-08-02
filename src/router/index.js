@@ -10,6 +10,7 @@ import AdminLoginView from '../views/LoginView.vue' // Login del Administrador
 import AdminDashboardView from '../views/AdminDashboardView.vue'
 import AdminProductosView from '../views/AdminProductosView.vue'
 import AdminCategoriasView from '../views/AdminCategoriasView.vue'
+import AdminPaymentsView from '../views/AdminPaymentsView.vue'; // <-- AÑADE ESTA LÍNEA
 import CatalogView from '../views/CatalogView.vue'
 import CartView from '../views/CartView.vue'
 import CheckoutView from '../views/CheckoutView.vue'
@@ -61,6 +62,7 @@ const router = createRouter({
         { path: 'categorias', name: 'admin-categorias', component: AdminCategoriasView },
         { path: 'pedidos', name: 'admin-pedidos', component: AdminPedidosView },
         { path: 'cupones', name: 'admin-cupones', component: AdminCuponesView },
+        { path: 'metodos-pago', name: 'admin-metodos-pago', component: AdminPaymentsView },
 
       ],
     },

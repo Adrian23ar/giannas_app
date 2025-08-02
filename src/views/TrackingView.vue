@@ -56,6 +56,18 @@ async function searchOrder() {
         <p class="text-lg font-bold text-brand-fucsia capitalize">{{ orderDetails.estado.replace(/_/g, ' ') }}</p>
       </div>
 
+      <div v-if="orderDetails.pagos && orderDetails.pagos.length > 0" class="mt-6 border-t pt-4">
+        <h3 class="font-semibold mb-2">Detalles del Pago:</h3>
+        <div class="text-sm space-y-1">
+          <p>
+            <strong>Método:</strong> {{ orderDetails.pagos[0].metodos_pago?.nombre || 'No disponible' }}
+          </p>
+          <p>
+            <strong>Referencia:</strong> {{ orderDetails.pagos[0].nro_referencia }}
+          </p>
+        </div>
+      </div>
+
       <div class="mt-6 border-t pt-4">
         <h3 class="font-semibold mb-2">Resumen de tu compra:</h3>
         <ul class="space-y-2">

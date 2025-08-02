@@ -11,7 +11,8 @@ import {
   TagIcon,
   XMarkIcon,
   ShoppingCartIcon,
-  TicketIcon
+  TicketIcon,
+  CreditCardIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -82,6 +83,13 @@ watch(route, () => {
               :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/cupones' }]">
               <TicketIcon class="h-6 w-6 flex-shrink-0" />
               <span v-if="isSidebarOpen">Cupones</span>
+            </RouterLink>
+          </li>
+          <li>
+            <RouterLink to="/admin/metodos-pago" class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
+              :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/metodos-pago' }]">
+              <CreditCardIcon class="h-6 w-6 flex-shrink-0" />
+              <span v-if="isSidebarOpen">Métodos de Pago</span>
             </RouterLink>
           </li>
         </ul>

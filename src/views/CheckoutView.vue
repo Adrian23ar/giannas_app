@@ -1,36 +1,58 @@
 <script setup>
 // src/views/CheckoutView.vue
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue' // <-- Añadido 'watch'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cartStore'
 import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'vue-toastification'
 import { supabase } from '../supabase'
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet"
-import L from 'leaflet'
 import CustomButton from '@/components/CustomButton.vue'
+import { paymentMethodService } from '@/services/paymentMethodService' // <-- 1. IMPORTAR SERVICIO
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
 const router = useRouter()
 const toast = useToast()
 
-// --- Estado del formulario ---
+// --- Estado del formulario (sin cambios) ---
 const cliente = ref({ nombre: '', telefono: '' })
 const metodoEntrega = ref('recogida')
 const direccion = ref('')
-const pago = ref({ referencia: '', fecha: '', banco_emisor: '' }) // Monto se tomará del total final
 const procesando = ref(false)
-// Esta propiedad calcula la fecha de hoy en el formato YYYY-MM-DD
+
+// --- MODIFICACIÓN DEL OBJETO 'pago' ---
+// Eliminamos banco_emisor y fecha, y añadimos metodo_pago_id
+const pago = ref({
+  referencia: '',
+  metodo_pago_id: null
+}) // <-- 2. ESTADO DE PAGO MODIFICADO
+
+const fechaTransaccion = ref('') // <-- AÑADE ESTE NUEVO REF
+
+
 const maxDate = computed(() => {
   const today = new Date();
   const year = today.getFullYear();
-  const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Se añade +1 porque los meses empiezan en 0
+  const month = (today.getMonth() + 1).toString().padStart(2, '0');
   const day = today.getDate().toString().padStart(2, '0');
   return `${year}-${month}-${day}`;
 });
 
-// --- Estado del Cupón ---
+// --- NUEVOS ESTADOS PARA MÉTODOS DE PAGO ---
+const paymentMethods = ref([])
+const selectedPaymentMethod = ref(null) // <-- 3. NUEVOS ESTADOS
+
+// --- NUEVA PROPIEDAD COMPUTADA ---
+// Filtra los métodos de pago según el tipo de entrega
+const availablePaymentMethods = computed(() => {
+  if (metodoEntrega.value === 'envio') {
+    return paymentMethods.value.filter(method => method.disponibilidad !== 'recogida');
+  }
+  return paymentMethods.value;
+}) // <-- 4. NUEVA PROPIEDAD COMPUTADA
+
+// --- Estado del Cupón (sin cambios) ---
 const showCouponInput = ref(false)
 const couponCode = ref('')
 
@@ -40,42 +62,34 @@ const mapCenter = ref([10.196, -71.313])
 const markerLatLng = ref([10.196, -71.313])
 const isLocating = ref(false);
 
-
-const bancos = ref([
-  { code: "0102", name: "BANCO DE VENEZUELA" },
-  { code: "0104", name: "BANCO VENEZOLANO DE CREDITO" },
-  { code: "0105", name: "BANCO MERCANTIL" },
-  { code: "0108", name: "BBVA PROVINCIAL" },
-  { code: "0114", name: "BANCARIBE" },
-  { code: "0115", name: "BANCO EXTERIOR" },
-  { code: "0128", name: "BANCO CARONI" },
-  { code: "0134", name: "BANESCO" },
-  { code: "0137", name: "BANCO SOFITASA" },
-  { code: "0138", name: "BANCO PLAZA" },
-  { code: "0146", name: "BANGENTE" },
-  { code: "0151", name: "BANCO FONDO COMUN" },
-  { code: "0156", name: "100% BANCO" },
-  { code: "0157", name: "DELSUR BANCO UNIVERSAL" },
-  { code: "0163", name: "BANCO DEL TESORO" },
-  { code: "0168", name: "BANCRECER" },
-  { code: "0169", name: "MI BANCO" },
-  { code: "0171", name: "BANCO ACTIVO" },
-  { code: "0172", name: "BANCAMIGA" },
-  { code: "0173", name: "BANCO INTERNACIONAL DE DESARROLLO" },
-  { code: "0174", name: "BANPLUS" },
-  { code: "0175", name: "BANCO BICENTENARIO" },
-  { code: "0177", name: "BANFANB" },
-  { code: "0191", name: "BANCO NACIONAL DE CREDITO" }
-]);
-
-// --- 3. Lógica para autorellenar ---
-onMounted(() => {
+// --- MODIFICACIÓN DEL onMounted ---
+onMounted(async () => {
   if (userStore.isLoggedIn) {
     cliente.value.nombre = userStore.userFullName;
     cliente.value.telefono = userStore.userPhone;
   }
+  // Añadimos la carga de métodos de pago
+  try {
+    paymentMethods.value = await paymentMethodService.getActiveMethods();
+  } catch (error) {
+    toast.error('No se pudieron cargar los métodos de pago.');
+  } // <-- 5. CARGAR MÉTODOS DE PAGO
 })
 
+// --- NUEVO WATCHER ---
+// Observa si el método seleccionado deja de estar disponible al cambiar la entrega
+watch(metodoEntrega, () => {
+  const isSelectedAvailable = availablePaymentMethods.value.some(
+    (method) => method.id === pago.value.metodo_pago_id
+  );
+
+  if (!isSelectedAvailable) {
+    pago.value.metodo_pago_id = null;
+    selectedPaymentMethod.value = null;
+  }
+}) // <-- 6. NUEVO WATCHER
+
+// --- Lógica de Mapa y Cupón (sin cambios, no se muestra por brevedad) ---
 function onMarkerDragEnd(event) {
   markerLatLng.value = [event.target.getLatLng().lat, event.target.getLatLng().lng]
 }
@@ -134,7 +148,6 @@ async function getUserLocation() {
   }
 }
 
-// --- Lógica de Cupones y Pedido ---
 async function handleApplyCoupon() {
   if (!couponCode.value.trim()) return
   try {
@@ -144,28 +157,34 @@ async function handleApplyCoupon() {
     toast.error(error.message)
   }
 }
-
 function handleRemoveCoupon() {
   cartStore.removeCoupon()
   toast.info('Cupón eliminado.')
 }
+// --- FIN Lógica de Mapa y Cupón ---
 
+
+// --- FUNCIÓN procesarPedido ACTUALIZADA ---
 async function procesarPedido() {
   if (cartStore.items.length === 0) return toast.error('Tu carrito está vacío.')
+  // Añadimos validaciones
+  if (!pago.value.metodo_pago_id) return toast.error('Debes seleccionar un método de pago.');
+  if (!pago.value.referencia) return toast.error('Debes colocar el número de referencia.');
+
   procesando.value = true
 
-  // Guardamos el cupón antes de limpiar el carrito
   const appliedCouponId = cartStore.appliedCoupon?.id
-  const orderUserId = userStore.isLoggedIn ? userStore.user.id : null // <-- Guardamos el ID del usuario
+  const orderUserId = userStore.isLoggedIn ? userStore.user.id : null
 
   try {
+    // La estructura del pedido se mantiene igual
     const pedidoParaGuardar = {
       user_id: orderUserId,
       nombre_cliente: cliente.value.nombre,
       telefono_cliente: cliente.value.telefono,
       metodo_entrega: metodoEntrega.value,
       direccion_envio: metodoEntrega.value === 'envio' ? direccion.value : null,
-      total: cartStore.finalTotal, // Usamos el total final con descuento
+      total: cartStore.finalTotal,
       estado: 'verificando_pago',
       latitud: metodoEntrega.value === 'envio' ? markerLatLng.value[0] : null,
       longitud: metodoEntrega.value === 'envio' ? markerLatLng.value[1] : null,
@@ -180,34 +199,33 @@ async function procesarPedido() {
       cantidad: item.quantity,
       precio_unitario: item.precio,
     }))
-
     const { error: detallesError } = await supabase.from('detalles_pedido').insert(detallesPedido)
     if (detallesError) throw detallesError
 
+    // Modificamos el objeto de pago para que coincida con la nueva estructura
     const { error: pagoError } = await supabase.from('pagos').insert({
       pedido_id: pedidoId,
       nro_referencia: pago.value.referencia,
-      fecha: pago.value.fecha,
-      banco_emisor: pago.value.banco_emisor,
-      monto: cartStore.finalTotal, // Guardamos el monto final
+      monto: cartStore.finalTotal,
+      metodo_pago_id: pago.value.metodo_pago_id, // <-- Campo nuevo y clave
+      fecha: fechaTransaccion.value // <-- Guardamos la fecha actual del pago
     })
     if (pagoError) throw pagoError
 
-    // Si se usó un cupón, incrementamos su contador de uso
     if (appliedCouponId) {
       const { incrementCouponUsage } = await import('@/services/couponService')
       await incrementCouponUsage(appliedCouponId)
     }
-    // Limpiamos el carrito
     cartStore.clearCart()
 
     router.push(`/confirmation/${pedidoId}`)
   } catch (error) {
     toast.error('Hubo un error al procesar tu pedido.')
+    console.error(error) // <-- Es bueno dejar el log para depuración
   } finally {
     procesando.value = false
   }
-}
+} // <-- 7. FUNCIÓN DE PROCESAR PEDIDO ACTUALIZADA
 </script>
 
 <template>
@@ -225,7 +243,7 @@ async function procesarPedido() {
               class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none"
               :disabled="userStore.isLoggedIn" :class="{ 'bg-gray-100': userStore.isLoggedIn }">
           </div>
-           <p v-if="userStore.isLoggedIn" class="text-xs text-gray-500 mt-2">
+          <p v-if="userStore.isLoggedIn" class="text-xs text-gray-500 mt-2">
             Estos datos se toman de tu cuenta. Para modificarlos, ve a "Mi Cuenta".
           </p>
         </div>
@@ -269,29 +287,54 @@ async function procesarPedido() {
         </div>
         <div class="bg-white p-6 rounded-lg shadow-md">
           <h2 class="text-2xl font-bold mb-4">3. Registra tu Pago</h2>
-          <p class="text-sm text-gray-600 mb-4">Realiza una transferencia al siguiente destinatario y luego registra los
-            datos de la transacción aquí.</p>
-          <div class="space-y-4">
-            <input v-model="pago.referencia" type="number" inputmode="numeric" placeholder="Nro. de Referencia" required
-              class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none">
-            <label class="block">
-              <span class="text-gray-700 font-medium text-sm">Banco Emisor</span>
-              <select v-model="pago.banco_emisor" required
-                class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50">
-                <option value="" disabled selected>Selecciona un banco</option>
-                <option v-for="banco in bancos" :key="banco.code" :value="`${banco.code} - ${banco.name}`">
-                  {{ banco.code }} - {{ banco.name }}
-                </option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="text-gray-700 font-medium text-sm">Fecha de la Transacción</span>
-              <input v-model="pago.fecha" type="date" required :max="maxDate"
-                class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50">
-            </label>
+          <p class="text-sm text-gray-600 mb-4">Selecciona cómo deseas pagar:</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div v-for="method in availablePaymentMethods" :key="method.id"
+              @click="pago.metodo_pago_id = method.id; selectedPaymentMethod = method"
+              class="p-4 border rounded-lg cursor-pointer transition-all duration-200"
+              :class="pago.metodo_pago_id === method.id ? 'border-brand-fucsia bg-fuchsia-50 ring-2 ring-brand-fucsia' : 'border-gray-200 hover:border-gray-400'">
+              <p class="font-bold text-gray-800">{{ method.nombre }}</p>
+              <p class="text-sm text-gray-500 capitalize">{{ method.tipo.replace('-', ' ') }}</p>
+            </div>
+          </div>
+          <div v-if="selectedPaymentMethod" class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+            <h4 class="font-bold text-gray-700 mb-2">Datos para realizar el pago:</h4>
+            <div class="space-y-1 text-sm text-gray-600">
+              <div v-if="selectedPaymentMethod.detalles?.banco"><strong>Banco:</strong> {{
+                selectedPaymentMethod.detalles.banco }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.telefono"><strong>Teléfono:</strong> {{
+                selectedPaymentMethod.detalles.telefono }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.cuenta"><strong>Nro. Cuenta:</strong> {{
+                selectedPaymentMethod.detalles.cuenta }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.ci"><strong>Cédula/RIF:</strong> {{
+                selectedPaymentMethod.detalles.ci }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.titular"><strong>Titular:</strong> {{
+                selectedPaymentMethod.detalles.titular }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.correo"><strong>Correo:</strong> {{
+                selectedPaymentMethod.detalles.correo }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.extra" class="italic text-xs mt-1">{{
+                selectedPaymentMethod.detalles.extra }}</div>
+            </div>
+          </div>
+          <div class="text-center text-sm text-gray-500 my-4 p-3 bg-blue-50 rounded-lg">
+            <p>Para pagos con <strong>Zelle</strong>, por favor contáctanos vía WhatsApp para coordinar.</p>
+          </div>
+          <label class="block mb-2">
+            <span class="text-gray-700 font-medium text-sm">Nro. de Referencia o Transacción</span>
+            <input v-model="pago.referencia" type="text" placeholder="Ej: 00123456"
+              class="mt-1 block w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none"
+              required />
+          </label>
+          <label class="block mb-2">
+            <span class="text-gray-700 font-medium text-sm">Fecha de la Transacción</span>
+            <input v-model="fechaTransaccion" type="date" required :max="maxDate"
+              class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50">
+          </label>
+          <label class="block mb-2">
+            <span class="text-gray-700 font-medium text-sm">Monto</span>
             <input :value="cartStore.finalTotal.toFixed(2)" type="number" step="0.01" placeholder="Monto Exacto"
               required class="w-full p-2 border rounded-md bg-gray-100" readonly>
-          </div>
+          </label>
         </div>
       </div>
       <div class="lg:col-span-1">

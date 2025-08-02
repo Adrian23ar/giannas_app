@@ -1,4 +1,5 @@
 <script setup>
+// src/views/AdminPedidosView.vue
 import { ref, onMounted, computed, Transition } from 'vue'
 // Importamos las funciones de nuestro nuevo servicio
 import { getOrders, getOrderDetails, updateOrderStatus } from '@/services/orderService'
@@ -30,6 +31,7 @@ async function obtenerPedidos() {
 
 // Llama al servicio para obtener los detalles y mostrar el modal
 async function mostrarDetalles(pedido) {
+  console.log(pedido);
   try {
     pedidoSeleccionado.value = await getOrderDetails(pedido.id)
     modalActivo.value = true
@@ -146,11 +148,22 @@ onMounted(obtenerPedidos)
             </section>
             <section>
               <h3 class="font-bold mb-2">Detalles del Pago</h3>
-              <p><strong>Referencia:</strong> {{ pedidoSeleccionado.pagos[0]?.nro_referencia || 'N/A' }}</p>
-              <p><strong>Banco Emisor:</strong> {{ pedidoSeleccionado.pagos[0]?.banco_emisor || 'N/A' }}</p>
-              <p><strong>Fecha:</strong> {{ formatDisplayDate(pedidoSeleccionado.pagos[0]?.fecha) }}</p>
-
-              <p><strong>Monto:</strong> ${{ pedidoSeleccionado.pagos[0]?.monto.toFixed(2) || '0.00' }}</p>
+              <p>
+                <strong>Método:</strong>
+                {{ pedidoSeleccionado.pagos[0]?.metodos_pago?.nombre || 'No especificado' }}
+              </p>
+              <p>
+                <strong>Referencia:</strong>
+                {{ pedidoSeleccionado.pagos[0]?.nro_referencia || 'N/A' }}
+              </p>
+              <p>
+                <strong>Fecha:</strong>
+                {{ formatDisplayDate(pedidoSeleccionado.pagos[0]?.fecha) }}
+              </p>
+              <p>
+                <strong>Monto:</strong>
+                ${{ pedidoSeleccionado.pagos[0]?.monto.toFixed(2) || '0.00' }}
+              </p>
             </section>
             <section>
               <h3 class="font-bold mb-2">Productos Ordenados</h3>
