@@ -106,7 +106,7 @@ onMounted(obtenerCategorias)
 
     <div class="mb-8 bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-xl font-semibold mb-4 text-gray-700">Añadir Nueva Categoría</h2>
-      <form @submit.prevent="agregarCategoria" class="flex items-center gap-4">
+      <form @submit.prevent="agregarCategoria" class="flex flex-col md:flex-row md:items-center gap-4">
         <input type="text" v-model="nuevaCategoriaNombre" placeholder="Ej: Galletas Rellenas"
           class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50" />
         <CustomButton type="submit">

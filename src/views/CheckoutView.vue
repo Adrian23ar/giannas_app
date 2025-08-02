@@ -55,6 +55,8 @@ const availablePaymentMethods = computed(() => {
 // --- Estado del Cupón (sin cambios) ---
 const showCouponInput = ref(false)
 const couponCode = ref('')
+const isLoading = ref(false);
+
 
 // --- Lógica del Mapa (sin cambios) ---
 const zoom = ref(14);
@@ -150,11 +152,16 @@ async function getUserLocation() {
 
 async function handleApplyCoupon() {
   if (!couponCode.value.trim()) return
+
+  isLoading.value = true
   try {
     const coupon = await cartStore.applyCoupon(couponCode.value)
     toast.success(`¡Cupón "${coupon.codigo}" aplicado con éxito!`)
+
   } catch (error) {
     toast.error(error.message)
+  } finally {
+    isLoading.value = false
   }
 }
 function handleRemoveCoupon() {
@@ -353,10 +360,10 @@ async function procesarPedido() {
               ¿Tienes un cupón?
             </a>
             <Transition name="slide-fade">
-              <div v-if="showCouponInput && !cartStore.appliedCoupon" class="flex gap-2 mt-2">
+              <div v-if="showCouponInput && !cartStore.appliedCoupon" class="flex flex-col md:flex-row gap-2 mt-2">
                 <input v-model="couponCode" type="text" placeholder="Ingresa tu código"
                   class="flex-grow p-2 border rounded-md text-sm">
-                <CustomButton @click.prevent="handleApplyCoupon">Aplicar</CustomButton>
+                <CustomButton @click.prevent="handleApplyCoupon" :disabled="isLoading">{{ isLoading ? 'Aplicando...' : 'Aplicar' }}</CustomButton>
               </div>
             </Transition>
           </div>

@@ -48,7 +48,7 @@ watch(route, () => {
         </button>
       </div>
 
-      <nav class="mt-4 flex flex-col h-[calc(100%-80px)]">
+      <nav class="mt-4 flex flex-col h-[calc(100%-95px)]">
         <ul class="flex-grow">
           <li>
             <RouterLink to="/admin" class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
@@ -93,8 +93,8 @@ watch(route, () => {
             </RouterLink>
           </li>
         </ul>
-        <div class="p-4 border-t border-white/10">
-          <button @click="handleLogout" class="w-full flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
+        <div class="border-t border-white/10">
+          <button @click="handleLogout" class="w-full flex items-center py-4 gap-4 hover:bg-white/10 transition-colors"
             :class="isSidebarOpen ? 'px-6' : 'px-0 justify-center'">
             <ArrowLeftOnRectangleIcon class="h-6 w-6 flex-shrink-0" />
             <span v-if="isSidebarOpen">Cerrar Sesión</span>

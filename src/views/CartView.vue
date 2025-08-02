@@ -46,21 +46,33 @@ function orderViaWhatsApp() {
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2 space-y-4">
         <div v-for="item in cartStore.items" :key="item.id"
-          class="flex items-center gap-4 bg-white p-4 rounded-lg shadow-md">
+          class="flex flex-wrap items-center gap-x-4 gap-y-3 bg-white p-4 rounded-lg shadow-md">
+
           <img :src="item.foto_url" :alt="item.nombre" class="w-24 h-24 rounded-md object-cover">
-          <div class="flex-grow">
+
+          <div class="flex-grow min-w-[150px]">
             <h3 class="font-bold text-lg">{{ item.nombre }}</h3>
             <p class="text-gray-600">${{ item.precio.toFixed(2) }}</p>
           </div>
-          <div class="flex items-center gap-2 border rounded-md">
-            <button @click="cartStore.updateQuantity(item.id, item.quantity - 1)" class="px-3 py-1 font-bold">-</button>
-            <span>{{ item.quantity }}</span>
-            <button @click="cartStore.updateQuantity(item.id, item.quantity + 1)" class="px-3 py-1 font-bold">+</button>
+
+          <div class="w-full sm:w-auto flex items-center justify-end gap-4">
+
+            <div class="flex items-center gap-2 border rounded-md">
+              <button @click="cartStore.updateQuantity(item.id, item.quantity - 1)"
+                class="px-3 py-1 font-bold text-brand-morado">-</button>
+              <span class="font-semibold">{{ item.quantity }}</span>
+              <button @click="cartStore.updateQuantity(item.id, item.quantity + 1)"
+                class="px-3 py-1 font-bold text-brand-morado">+</button>
+            </div>
+
+            <p class="font-bold w-20 text-right text-lg">${{ (item.precio * item.quantity).toFixed(2) }}</p>
+
+            <button @click="cartStore.removeFromCart(item.id)" class="text-gray-500 hover:text-red-600">
+              <TrashIcon class="h-6 w-6" />
+            </button>
+
           </div>
-          <p class="font-bold w-20 text-right">${{ (item.precio * item.quantity).toFixed(2) }}</p>
-          <button @click="cartStore.removeFromCart(item.id)" class="text-gray-500 hover:text-red-600">
-            <TrashIcon class="h-6 w-6" />
-          </button>
+
         </div>
       </div>
 

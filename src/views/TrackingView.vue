@@ -38,7 +38,7 @@ async function searchOrder() {
     <p class="text-gray-600 mb-8">Introduce el número de tu orden para ver su estado actual.</p>
 
     <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-      <form @submit.prevent="searchOrder" class="flex gap-4">
+      <form @submit.prevent="searchOrder" class="flex flex-col sm:flex-row gap-4">
         <input v-model="orderId" type="number" placeholder="Ej: 12345"
           class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm" />
         <CustomButton type="submit" :disabled="isLoading">

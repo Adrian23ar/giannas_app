@@ -184,7 +184,7 @@ onMounted(obtenerDatosIniciales)
             <p v-if="modoEdicion" class="text-xs text-gray-500 mt-1">Deja este campo vacío si no quieres cambiar la
               imagen actual.</p>
           </div>
-          <div class="flex justify-end items-center gap-4 pt-4 border-t">
+          <div class="flex flex-col md:flex-row md:justify-end md:items-center gap-4 pt-4 border-t">
             <CustomButton v-if="modoEdicion" @click="resetearFormulario" variant="secondary">
               <XCircleIcon class="h-5 w-5" />
               Cancelar

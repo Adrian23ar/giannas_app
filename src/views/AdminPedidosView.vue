@@ -176,16 +176,21 @@ onMounted(obtenerPedidos)
               </ul>
               <p class="text-right font-bold mt-2">Total: ${{ pedidoSeleccionado.total.toFixed(2) }}</p>
             </section>
-            <section class="border-t pt-4 flex items-center gap-4">
-              <label for="estado" class="font-bold">Actualizar Estado:</label>
-              <select v-model="pedidoSeleccionado.estado" id="estado" class="p-2 border rounded-md">
-                <option value="verificando_pago">Verificando Pago</option>
-                <option value="en_preparacion">En Preparación</option>
-                <option value="listo_para_entrega">Listo para Entrega</option>
-                <option value="completado">Completado</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
-              <CustomButton @click="actualizarEstado">Actualizar</CustomButton>
+            <section class="border-t pt-4 flex flex-col gap-4">
+              <label for="estado" class="block md:flex md:items-center text-center justify-around font-bold">
+                <span>Actualizar Estado:
+                  <select v-model="pedidoSeleccionado.estado" id="estado" class="mx-2 p-2 border rounded-md">
+                    <option value="verificando_pago">Verificando Pago</option>
+                    <option value="en_preparacion">En Preparación</option>
+                    <option value="listo_para_entrega">Listo para Entrega</option>
+                    <option value="completado">Completado</option>
+                    <option value="cancelado">Cancelado</option>
+                  </select>
+                </span>
+
+                <CustomButton class="mt-4 md:mt-0 w-8/12 md:w-auto" @click="actualizarEstado">Actualizar</CustomButton>
+              </label>
+
             </section>
           </div>
         </div>
