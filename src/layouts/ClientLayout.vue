@@ -20,7 +20,7 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
           <img src="/logo-giannas.png" alt="Logo Gianna's Cookies" class="h-12">
         </RouterLink>
 
-        <div class="hidden md:flex items-center gap-6">
+        <div class="hidden md:flex items-center gap-6 pr-8 lg:pr-0">
           <RouterLink to="/" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Catálogo</RouterLink>
           <RouterLink to="/seguimiento" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Seguimiento
           </RouterLink>

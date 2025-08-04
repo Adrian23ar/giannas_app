@@ -16,6 +16,7 @@ export default {
         'brand-chocolate': '#772D04',
         'brand-galleta': '#B66F2F',
         'brand-rosa-palo': '#C09E9B',
+        'brand-rosa': '#ffc4e1',
         'brand-blanco': '#FFFAFA',
       }
     },

@@ -145,3 +145,49 @@ export const calculateProductStats = (products) => {
     lowStockCount,
   }
 }
+
+/**
+ * Obtiene productos filtrados dinámicamente.
+ * Esta es la nueva función principal para el catálogo.
+ * @param {object} filters - Un objeto con los filtros a aplicar.
+ * @param {string} filters.searchTerm - El texto para la búsqueda.
+ * @param {number} filters.categoryId - El ID de la categoría a filtrar.
+ * @param {number} filters.minPrice - El precio mínimo.
+ * @param {number} filters.maxPrice - El precio máximo.
+ */
+export async function getFilteredProducts(filters = {}) {
+  let query = supabase
+    .from('productos')
+    .select('*, categorias(nombre)') // Traemos el producto y el nombre de su categoría
+    .eq('activo', true) // Solo productos activos
+
+  // 1. Aplicar filtro de búsqueda de texto
+  if (filters.searchTerm) {
+    // Usamos textSearch para buscar en las columnas 'nombre' y 'descripcion'.
+    // Para un rendimiento óptimo, considera crear un índice tsvector en Supabase.
+    query = query.textSearch('nombre', `'${filters.searchTerm}'`, { type: 'websearch' })
+  }
+
+  // 2. Aplicar filtro de categoría
+  if (filters.categoryId) {
+    query = query.eq('categoria_id', filters.categoryId)
+  }
+
+  // 3. Aplicar filtro de rango de precios
+  if (filters.minPrice) {
+    query = query.gte('precio', filters.minPrice)
+  }
+  if (filters.maxPrice) {
+    query = query.lte('precio', filters.maxPrice)
+  }
+
+  // Ejecutamos la consulta final
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error al obtener productos filtrados:', error.message)
+    throw error
+  }
+
+  return data
+}

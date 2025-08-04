@@ -48,6 +48,11 @@ const router = createRouter({
         { path: 'pedidos', name: 'admin-pedidos', component: () => import('../views/AdminPedidosView.vue') },
         { path: 'cupones', name: 'admin-cupones', component: () => import('../views/AdminCuponesView.vue') },
         { path: 'metodos-pago', name: 'admin-metodos-pago', component: () => import('../views/AdminPaymentsView.vue') },
+        {
+          path: 'secciones',
+          name: 'admin-seccion',
+          component: () => import('@/views/AdminSectionsView.vue')
+        }
       ],
     },
   ],

@@ -1,7 +1,7 @@
 // src/stores/cartStore.js
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { useUserStore } from './userStore' // Importamos el userStore
+import { useUserStore } from './userStore'
 import { validateCoupon } from '@/services/couponService'
 import { fetchCart, upsertCartItem, removeCartItem, clearUserCart } from '@/services/cartService'
 
@@ -10,60 +10,61 @@ export const useCartStore = defineStore('cart', () => {
   const userStore = useUserStore()
   const items = ref([])
   const recentlyAddedId = ref(null)
-  const appliedCoupon = ref(null) // Guardará el cupón válido
-  const discountAmount = ref(0)   // Guardará el monto del descuento
+  const appliedCoupon = ref(null)
+  const discountAmount = ref(0)
 
-  // --- GETTERS (Propiedades Calculadas) ---
-  const totalItems = computed(() => items.value.length)
+  // --- GETTERS ---
+  const totalItems = computed(() => {
+    // Ahora cuenta la cantidad total de productos, no solo de líneas de item
+    return items.value.reduce((total, item) => total + item.quantity, 0)
+  })
 
-  // Renombramos 'totalPrice' a 'subtotal'
   const subtotal = computed(() => {
     return items.value.reduce((total, item) => {
       return total + (item.precio * item.quantity)
     }, 0)
   })
 
-  // Nuevo getter para el total final con descuento
   const finalTotal = computed(() => {
     const total = subtotal.value - discountAmount.value
-    return total < 0 ? 0 : total // Asegura que el total no sea negativo
+    return total < 0 ? 0 : total
   })
 
-  // --- ACTIONS (Funciones) ---
+  // --- ACTIONS ---
 
-  // Nueva función para cargar el carrito inicial
   async function initializeCart() {
     if (userStore.isLoggedIn) {
-      // Si el usuario tiene sesión, carga el carrito desde la DB
       items.value = await fetchCart(userStore.user.id)
     } else {
-      // Si es un invitado, carga el carrito desde LocalStorage
       const localCart = localStorage.getItem('guestCart')
       items.value = localCart ? JSON.parse(localCart) : []
     }
   }
 
-  // Observador: recalcula el descuento automáticamente si el carrito cambia
-  watch(items, recalculateDiscount, { deep: true });
-
-  async function addToCart(product) {
+  // ---------- INICIO DEL CAMBIO ----------
+  // Modificamos addToCart para que acepte una cantidad. Por defecto es 1.
+  async function addToCart(product, quantity = 1) {
     const existingProduct = items.value.find(item => item.id === product.id)
     if (existingProduct) {
-      existingProduct.quantity++
+      // Si el producto ya existe, sumamos la nueva cantidad
+      existingProduct.quantity += quantity
     } else {
-      items.value.push({ ...product, quantity: 1 })
+      // Si es nuevo, lo añadimos con la cantidad especificada
+      items.value.push({ ...product, quantity })
     }
 
     if (userStore.isLoggedIn) {
-      // Sincronizar con la DB
       const item = items.value.find(i => i.id === product.id)
       await upsertCartItem(userStore.user.id, item.id, item.quantity)
     }
+
+    // El feedback visual sigue funcionando igual
     recentlyAddedId.value = product.id
     setTimeout(() => {
       recentlyAddedId.value = null
     }, 1000)
   }
+  // ---------- FIN DEL CAMBIO ----------
 
   async function removeFromCart(productId) {
     const index = items.value.findIndex(item => item.id === productId)
@@ -89,8 +90,6 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
-
-  // clearCart ahora también limpia el cupón
   async function clearCart() {
     if (userStore.isLoggedIn) {
       await clearUserCart(userStore.user.id)
@@ -105,27 +104,24 @@ export const useCartStore = defineStore('cart', () => {
     let discount = 0;
     if (appliedCoupon.value.tipo === 'porcentaje') {
       discount = subtotal.value * (appliedCoupon.value.valor / 100);
-    } else { // tipo 'fijo'
+    } else {
       discount = appliedCoupon.value.valor;
     }
-    // El descuento no puede ser mayor que el subtotal
     discountAmount.value = Math.min(discount, subtotal.value);
   }
-  // Nueva acción para aplicar el cupón
+
   async function applyCoupon(code) {
-    const coupon = await validateCoupon(code) // Llama al servicio que valida
-    appliedCoupon.value = coupon // Guarda el cupón si es válido
-    recalculateDiscount() // Calcula el descuento inicial
-    return coupon // Devuelve el cupón para mostrar un mensaje de éxito
+    const coupon = await validateCoupon(code)
+    appliedCoupon.value = coupon
+    recalculateDiscount()
+    return coupon
   }
 
-  // Nueva acción para quitar el cupón
   function removeCoupon() {
     appliedCoupon.value = null
     discountAmount.value = 0
   }
 
-  // Observador para guardar el carrito de invitado en LocalStorage
   watch(items, (newItems) => {
     if (!userStore.isLoggedIn) {
       localStorage.setItem('guestCart', JSON.stringify(newItems))
@@ -133,33 +129,28 @@ export const useCartStore = defineStore('cart', () => {
     recalculateDiscount()
   }, { deep: true });
 
-  // Observador para cargar el carrito cuando el usuario inicia sesión
   watch(() => userStore.isLoggedIn, (isLoggedIn) => {
     if (isLoggedIn) {
-      // Lógica para migrar el carrito local a la DB (opcional pero recomendado)
-      // Por ahora, simplemente cargamos el carrito de la DB
       initializeCart()
     } else {
-      // Si cierra sesión, volvemos a un carrito local
       initializeCart()
     }
   });
 
-  // 3. Exponemos los nuevos estados y acciones
   return {
     items,
     recentlyAddedId,
     appliedCoupon,
     discountAmount,
     totalItems,
-    subtotal,      // <- Renombrado
-    finalTotal,    // <- Nuevo
+    subtotal,
+    finalTotal,
     initializeCart,
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
-    applyCoupon,   // <- Nuevo
-    removeCoupon,  // <- Nuevo
+    applyCoupon,
+    removeCoupon,
   }
 })

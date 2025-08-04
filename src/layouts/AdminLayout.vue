@@ -12,7 +12,8 @@ import {
   XMarkIcon,
   ShoppingCartIcon,
   TicketIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  Square3Stack3DIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -86,10 +87,17 @@ watch(route, () => {
             </RouterLink>
           </li>
           <li>
-            <RouterLink to="/admin/metodos-pago" class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
+            <RouterLink to="/admin/metodos-pago"
+              class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
               :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/metodos-pago' }]">
               <CreditCardIcon class="h-6 w-6 flex-shrink-0" />
               <span v-if="isSidebarOpen">Métodos de Pago</span>
+            </RouterLink>
+          </li>
+          <li>
+            <RouterLink to="/admin/secciones" class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors":class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/secciones' }]">
+              <Square3Stack3DIcon class="h-6 w-6 flex-shrink-0" />
+              <span v-if="isSidebarOpen">Secciones</span>
             </RouterLink>
           </li>
         </ul>
@@ -113,12 +121,12 @@ watch(route, () => {
         <AdminNotificationBell />
 
       </header>
-      <main class="p-4 md:p-6 max-w-6xl mx-auto">
+      <main class="p-4 md:p-6 max-w-8xl mx-auto">
         <RouterView v-slot="{ Component }">
-        <Transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </Transition>
-      </RouterView>
+          <Transition name="fade" mode="out-in">
+            <component :is="Component" />
+          </Transition>
+        </RouterView>
       </main>
     </div>
   </div>

@@ -83,7 +83,7 @@ function orderViaWhatsApp() {
             <p class="text-gray-600">Subtotal</p>
             <p class="font-bold text-lg">${{ cartStore.subtotal.toFixed(2) }}</p>
           </div>
-          <p class="text-xs text-gray-500 mt-2">Costos de envío se calcularán en el siguiente paso.</p>
+          <p class="text-xs text-gray-500 mt-2">Costos de envío consultar al Whatsapp.</p>
           <RouterLink to="/checkout"
             class="block text-center w-full mt-6 bg-brand-fucsia text-white font-bold py-3 rounded-md hover:bg-opacity-90">
             Proceder al Pago
