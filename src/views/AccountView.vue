@@ -1,19 +1,33 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useUserStore } from '@/stores/userStore';
 import { getOrdersByUserId } from '@/services/orderService';
+import { getSpecialOrdersByUserId } from '@/services/specialOrderService'; // Importamos el nuevo servicio
 import { formatDisplayDate } from '@/utils/formatters.js';
 
 const userStore = useUserStore();
-const pedidos = ref([]);
+const allOrders = ref([]); // Un único array para todos los pedidos
 const cargando = ref(true);
 
 onMounted(async () => {
   if (userStore.isLoggedIn) {
     try {
-      pedidos.value = await getOrdersByUserId(userStore.user.id);
+      // Pedimos ambos tipos de pedidos en paralelo
+      const [normalOrdersData, specialOrdersData] = await Promise.all([
+        getOrdersByUserId(userStore.user.id),
+        getSpecialOrdersByUserId(userStore.user.id)
+      ]);
+
+      // Mapeamos los datos para que tengan una estructura consistente
+      const normalOrders = normalOrdersData.map(o => ({ ...o, type: 'normal' }));
+      const specialOrders = specialOrdersData.map(o => ({ ...o, type: 'special' }));
+
+      // Combinamos y ordenamos por fecha
+      allOrders.value = [...normalOrders, ...specialOrders]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
     } catch (error) {
-      // Manejar error con un toast si se desea
+      console.error("Error al cargar el historial de pedidos:", error);
     } finally {
       cargando.value = false;
     }
@@ -24,7 +38,6 @@ onMounted(async () => {
 <template>
   <div>
     <h1 class="text-4xl font-bold text-brand-morado mb-8">Mi Cuenta</h1>
-
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
       <div class="md:col-span-1">
         <div class="bg-white p-6 rounded-lg shadow-md">
@@ -45,29 +58,43 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-
       <div class="md:col-span-2">
         <div class="bg-white p-6 rounded-lg shadow-md">
-          <h2 class="text-2xl font-bold border-b pb-4">Mis Pedidos</h2>
+          <h2 class="text-2xl font-bold border-b pb-4">Mi Historial</h2>
           <div v-if="cargando" class="text-center py-8">Cargando historial...</div>
-          <div v-else-if="pedidos.length > 0" class="space-y-4 mt-4">
-            <div v-for="pedido in pedidos" :key="pedido.id"
-              class="border p-4 rounded-md flex justify-between items-center">
-              <div>
-                <p class="font-bold">Pedido #{{ pedido.id }}</p>
-                <p class="text-sm text-gray-500">Fecha: {{ formatDisplayDate(pedido.created_at) }}</p>
+          <div v-else-if="allOrders.length > 0" class="space-y-4 mt-4">
+            <div v-for="order in allOrders" :key="`${order.type}-${order.id}`"
+              class="border p-4 rounded-md flex justify-between items-start">
+
+              <div v-if="order.type === 'normal'" class="w-full">
+                <div class="flex justify-between items-center">
+                  <p class="font-bold">Pedido #{{ order.id }}</p>
+                  <p class="font-bold text-lg">${{ order.total.toFixed(2) }}</p>
+                </div>
+                <p class="text-sm text-gray-500">Fecha: {{ formatDisplayDate(order.created_at) }}</p>
                 <p class="text-sm capitalize font-semibold"
-                  :class="{ 'text-green-600': pedido.estado === 'completado', 'text-yellow-600': pedido.estado === 'verificando_pago' }">
-                  {{ pedido.estado.replace(/_/g, ' ') }}
+                  :class="{ 'text-green-600': order.estado === 'completado', 'text-yellow-600': order.estado === 'verificando_pago' }">
+                  {{ order.estado.replace(/_/g, ' ') }}
                 </p>
               </div>
-              <div>
-                <p class="font-bold text-lg">${{ pedido.total.toFixed(2) }}</p>
+
+              <div v-if="order.type === 'special'" class="w-full">
+                <div class="flex justify-between items-center">
+                  <p class="font-bold">Solicitud #SO-{{ String(order.id).padStart(5, '0') }}</p>
+                  <p class="font-bold text-lg">{{ order.presupuesto_final ?
+                    `$${order.presupuesto_final.toFixed(2)}` : 'Cotizando' }}</p>
+                </div>
+                <p class="text-sm text-gray-500">Fecha: {{ formatDisplayDate(order.created_at) }}</p>
+                <p class="text-sm capitalize font-semibold"
+                  :class="{ 'text-green-600': order.estado === 'finalizado', 'text-yellow-600': order.estado === 'verificando_pago' }">
+                  {{ order.estado.replace(/_/g, ' ') }}
+                </p>
               </div>
+
             </div>
           </div>
           <div v-else class="text-center py-8 text-gray-500">
-            <p>Aún no has realizado ningún pedido.</p>
+            <p>Aún no has realizado ningún pedido o solicitud.</p>
           </div>
         </div>
       </div>

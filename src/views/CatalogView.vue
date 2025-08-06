@@ -156,7 +156,7 @@ onMounted(fetchInitialData)
         </div>
 
         <div v-else>
-          <div v-if="products.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div v-if="products.length > 0" class="grid justify-items-center grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
             <ProductCard v-for="producto in products" :key="producto.id" :producto="producto"
               :is-recently-added="recentlyAddedInCardId === producto.id" @show-details="handleShowDetails(producto)"
               @add-to-cart="handleAddToCartFromCard(producto)" />

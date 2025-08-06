@@ -95,9 +95,23 @@ watch(route, () => {
             </RouterLink>
           </li>
           <li>
-            <RouterLink to="/admin/secciones" class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors":class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/secciones' }]">
+            <RouterLink to="/admin/secciones" class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
+              :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/secciones' }]">
               <Square3Stack3DIcon class="h-6 w-6 flex-shrink-0" />
               <span v-if="isSidebarOpen">Secciones</span>
+            </RouterLink>
+          </li>
+          <li>
+            <RouterLink to="/admin/pedidos-especiales"
+              class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors" :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/pedidos-especiales' }]">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M21 11.25v8.25a8.25 8.25 0 01-16.5 0v-8.25a8.25 8.25 0 0116.5 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 15.75a.75.75 0 01.75.75v-1.5a.75.75 0 01-.75.75z" />
+              </svg>
+              <span>Pedidos Especiales</span>
             </RouterLink>
           </li>
         </ul>

@@ -1,5 +1,6 @@
 // src/services/orderService.js
 import { supabase } from '../supabase'
+import { findSpecialOrderById } from './specialOrderService'
 
 /**
  * Obtiene todos los pedidos, ordenados por fecha de creación.
@@ -42,7 +43,6 @@ export const getOrdersByUserId = async (userId) => {
  * los productos ordenados y la información del pago.
  * @param {number} orderId - El ID del pedido a buscar.
  */
-// src/services/orderService.js
 
 export const getOrderDetails = async (orderId) => {
   const { data, error } = await supabase
@@ -82,10 +82,6 @@ export const updateOrderStatus = async (orderId, newStatus) => {
   return data
 }
 
-// src/services/orderService.js
-
-// src/services/orderService.js
-
 /**
  * Obtiene los detalles de un pedido por su ID para la página de seguimiento.
  * @param {number} orderId - El ID del pedido a buscar.
@@ -112,5 +108,27 @@ export const findOrderById = async (orderId) => {
     }
     throw error;
   }
-  return data;
+  return { ...data, type: 'normal' };
+}
+
+/**
+ * FUNCIÓN MAESTRA DE BÚSQUEDA
+ * Busca cualquier tipo de orden (normal o especial) basado en el ID.
+ */
+export const findAnyOrder = async (trackingId) => {
+  if (!trackingId || !trackingId.trim()) {
+    throw new Error('Por favor, introduce un número de orden.');
+  }
+
+  const idString = trackingId.trim().toUpperCase();
+
+  if (idString.startsWith('SO-')) {
+    const numericId = parseInt(idString.replace('SO-', ''), 10);
+    if (isNaN(numericId)) throw new Error('El formato del ID de solicitud especial no es válido.');
+    return findSpecialOrderById(numericId);
+  } else {
+    const numericId = parseInt(idString, 10);
+    if (isNaN(numericId)) throw new Error('El formato del ID de pedido no es válido.');
+    return findOrderById(numericId);
+  }
 }

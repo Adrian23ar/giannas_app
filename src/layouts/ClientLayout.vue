@@ -21,18 +21,29 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
         </RouterLink>
 
         <div class="hidden md:flex items-center gap-6 pr-8 lg:pr-0">
-          <RouterLink to="/" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Catálogo</RouterLink>
-          <RouterLink to="/seguimiento" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Seguimiento
+          <RouterLink to="/" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Catálogo
+          </RouterLink>
+
+          <RouterLink to="/pedidos-especiales"
+            class="text-brand-blanco hover:text-brand-morado transition-all font-medium">
+            Pedidos para Eventos
+          </RouterLink>
+
+          <RouterLink to="/seguimiento" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">
+            Seguimiento
           </RouterLink>
 
           <template v-if="!userStore.isLoggedIn">
-            <RouterLink to="/ingresar" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Iniciar Sesión
+            <RouterLink to="/ingresar" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">
+              Iniciar Sesión
             </RouterLink>
           </template>
 
           <template v-else>
-            <RouterLink to="/mi-cuenta" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Mi Cuenta</RouterLink>
-            <button @click="userStore.signOut" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Cerrar
+            <RouterLink to="/mi-cuenta" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Mi
+              Cuenta</RouterLink>
+            <button @click="userStore.signOut"
+              class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Cerrar
               Sesión</button>
           </template>
 
@@ -43,10 +54,13 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
               {{ cartStore.totalItems }}
             </span>
           </RouterLink>
+
+
         </div>
 
         <div class="md:hidden flex items-center">
-          <RouterLink to="/cart" class="relative text-brand-blanco hover:text-brand-morado transition-all font-medium mr-6">
+          <RouterLink to="/cart"
+            class="relative text-brand-blanco hover:text-brand-morado transition-all font-medium mr-6">
             <ShoppingCartIcon class="h-6 w-6" /> <span
               class="absolute -top-2 -right-3 bg-brand-blanco text-brand-fucsia text-xs rounded-full h-5 w-5 flex items-center justify-center">
               {{ cartStore.totalItems }}
@@ -69,21 +83,29 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
           <div class="flex flex-col px-4 pt-2 pb-4 gap-3">
             <RouterLink @click="isMobileMenuOpen = false" to="/"
               class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Catálogo</RouterLink>
+              <RouterLink @click="isMobileMenuOpen = false" to="/pedidos-especiales"
+            class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">
+            Pedidos para Eventos
+          </RouterLink>
             <RouterLink @click="isMobileMenuOpen = false" to="/seguimiento"
-              class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Seguimiento</RouterLink>
+              class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Seguimiento
+            </RouterLink>
 
             <template v-if="!userStore.isLoggedIn">
               <hr class="my-1">
               <RouterLink @click="isMobileMenuOpen = false" to="/ingresar"
-                class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Iniciar Sesión</RouterLink>
+                class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Iniciar Sesión
+              </RouterLink>
             </template>
 
             <template v-else>
               <RouterLink @click="isMobileMenuOpen = false" to="/mi-cuenta"
-                class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Mi Cuenta</RouterLink>
+                class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Mi Cuenta
+              </RouterLink>
               <hr class="my-1">
               <button @click="() => { userStore.signOut(); isMobileMenuOpen = false; }"
-                class="text-left text-brand-blanco hover:text-brand-morado transition-all font-medium">Cerrar Sesión</button>
+                class="text-left text-brand-blanco hover:text-brand-morado transition-all font-medium">Cerrar
+                Sesión</button>
             </template>
           </div>
         </div>
@@ -108,19 +130,18 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
   </div>
 </template>
 
-  <style>
+<style>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
 
-  .fade-enter-active,
-  .fade-leave-active {
-    transition: opacity 0.2s ease;
-  }
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 
-  .fade-enter-from,
-  .fade-leave-to {
-    opacity: 0;
-  }
-
-  /* --- NUEVAS CLASES PARA LA TRANSICIÓN DEL MENÚ MÓVIL --- */
+/* --- NUEVAS CLASES PARA LA TRANSICIÓN DEL MENÚ MÓVIL --- */
 .slide-fade-enter-active {
   transition: all 0.3s ease-out;
 }

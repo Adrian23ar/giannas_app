@@ -25,7 +25,7 @@ function onShowDetails() {
 
 <template>
   <div
-    class="bg-brand-rosa md:bg-brand-rosa p-3 rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform duration-300 flex flex-col">
+    class="bg-brand-rosa md:bg-brand-rosa p-3 rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform duration-300 max-w-64 flex flex-col">
     <div class="relative bg-white p-2 rounded-xl">
       <img :src="producto.foto_url" :alt="producto.nombre" class="w-full h-40 md:h-56 object-cover rounded-lg">
     </div>
@@ -43,11 +43,11 @@ function onShowDetails() {
       </div>
       <div class="flex items-center gap-3">
         <button @click="onShowDetails"
-          class="flex-1 bg-brand-galleta text-white text-sm md:text-base font-bold p-3 rounded-xl hover:bg-opacity-90 transition-colors">
+          class="flex-1 bg-brand-galleta text-white text-sm md:text-base font-semibold p-3 py-2 rounded-xl hover:bg-opacity-90 transition-colors">
           Detalles
         </button>
         <button @click="onAddToCart" :disabled="isRecentlyAdded"
-          class="bg-brand-fucsia justify-items-center w-1/3 text-white font-bold p-3 rounded-xl hover:bg-opacity-90 transition-colors"
+          class="bg-brand-fucsia justify-items-center w-1/3 text-white p-3 py-2 rounded-xl hover:bg-opacity-90 transition-colors"
           :class="{ 'bg-green-500': isRecentlyAdded }">
           <ShoppingCartIcon v-if="!isRecentlyAdded" class="w-5 h-5 md:w-6 md:h-6" />
           <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
