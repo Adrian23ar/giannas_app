@@ -16,6 +16,8 @@
     "@vue-leaflet/vue-leaflet": "^0.10.1",
     "chart.js": "^4.5.0",
     "date-fns": "^4.1.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
     "leaflet": "^1.9.4",
     "pinia": "^3.0.3",
     "swiper": "^11.2.10",

@@ -160,8 +160,12 @@ onMounted(obtenerPedidos)
                 {{ formatDisplayDate(pedidoSeleccionado.pagos[0]?.fecha) }}
               </p>
               <p>
-                <strong>Monto:</strong>
-                ${{ pedidoSeleccionado.pagos[0]?.monto.toFixed(2) || '0.00' }}
+                <strong>Monto USD:</strong>
+                ${{ pedidoSeleccionado.pagos[0]?.monto.toFixed(2) || 'N/A' }}
+              </p>
+              <p v-if="pedidoSeleccionado.total_bs > 0">
+                <strong>Monto Bolivares:</strong>
+                {{ pedidoSeleccionado.total_bs.toFixed(2) || '0.00' }} Bs.D
               </p>
             </section>
             <section>

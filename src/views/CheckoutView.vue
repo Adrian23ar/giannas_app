@@ -10,6 +10,8 @@ import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet"
 import CustomButton from '@/components/CustomButton.vue'
 import { paymentMethodService } from '@/services/paymentMethodService' // <-- 1. IMPORTAR SERVICIO
 import { incrementCouponUsage } from '@/services/couponService' // <-- AÑADE ESTA LÍNEA
+// --- NUEVO: IMPORTAR SERVICIO DE TASA DE CAMBIO ---
+import { getLatestExchangeRate } from '@/services/exchangeRateService'
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
@@ -57,6 +59,10 @@ const showCouponInput = ref(false)
 const couponCode = ref('')
 const isLoading = ref(false);
 
+// --- NUEVO: ESTADOS PARA LA CONVERSIÓN DE MONEDA ---
+const exchangeRate = ref(null)        // Para guardar la tasa obtenida
+const totalInBolivares = ref(null)    // Para guardar el total calculado en VES
+const isLoadingRate = ref(false)      // Para mostrar un indicador de carga
 
 // --- Lógica del Mapa (sin cambios) ---
 const zoom = ref(14);
@@ -95,7 +101,6 @@ onMounted(async () => {
   } // <-- 5. CARGAR MÉTODOS DE PAGO
 })
 
-// --- NUEVO WATCHER ---
 // Observa si el método seleccionado deja de estar disponible al cambiar la entrega
 watch(metodoEntrega, () => {
   const isSelectedAvailable = availablePaymentMethods.value.some(
@@ -106,7 +111,43 @@ watch(metodoEntrega, () => {
     pago.value.metodo_pago_id = null;
     selectedPaymentMethod.value = null;
   }
-}) // <-- 6. NUEVO WATCHER
+})
+
+// --- MODIFICADO: EL WATCHER AHORA TIENE MÁS LÓGICA ---
+// Observamos el ID del método de pago seleccionado por el usuario.
+watch(() => pago.value.metodo_pago_id, async (newId) => {
+  // Limpiamos los valores de conversión anteriores
+  totalInBolivares.value = null;
+  exchangeRate.value = null;
+
+  if (!newId) {
+    selectedPaymentMethod.value = null;
+    return;
+  }
+
+  // Encontramos el objeto completo del método de pago
+  selectedPaymentMethod.value = paymentMethods.value.find(m => m.id === newId);
+
+  // Verificamos si el tipo de método requiere conversión a Bolívares
+  const needsConversion = selectedPaymentMethod.value?.tipo === 'pago-movil' || selectedPaymentMethod.value?.tipo === 'transferencia';
+
+  if (needsConversion) {
+    isLoadingRate.value = true;
+    try {
+      const rate = await getLatestExchangeRate(); // ¡Llamamos a nuestro servicio!
+      if (rate) {
+        exchangeRate.value = rate;
+        totalInBolivares.value = cartStore.finalTotal * rate;
+      } else {
+        toast.error("No se pudo obtener la tasa de cambio. Intente más tarde.");
+      }
+    } catch (error) {
+      toast.error("Error al buscar la tasa de cambio.");
+    } finally {
+      isLoadingRate.value = false;
+    }
+  }
+});
 
 // --- Lógica de Mapa y Cupón (sin cambios, no se muestra por brevedad) ---
 function onMarkerDragEnd(event) {
@@ -193,20 +234,17 @@ async function procesarPedido() {
   if (cartStore.items.length === 0) return toast.error('Tu carrito está vacío.')
   if (!pago.value.metodo_pago_id) return toast.error('Debes seleccionar un método de pago.');
 
-  // ----- 2. INICIO DEL CAMBIO: VALIDACIÓN CONDICIONAL -----
-  // Solo validamos la referencia si los campos son visibles.
   if (showPaymentReference.value) {
     if (!pago.value.referencia) return toast.error('Debes colocar el número de referencia.');
     if (!fechaTransaccion.value) return toast.error('Debes seleccionar la fecha de la transacción.');
   }
-  // ----- FIN DEL CAMBIO -----
   procesando.value = true
 
   const appliedCouponId = cartStore.appliedCoupon?.id
   const orderUserId = userStore.isLoggedIn ? userStore.user.id : null
 
   try {
-    // La estructura del pedido se mantiene igual
+    // --- INICIO DE LA MODIFICACIÓN ---
     const pedidoParaGuardar = {
       user_id: orderUserId,
       nombre_cliente: cliente.value.nombre,
@@ -217,7 +255,10 @@ async function procesarPedido() {
       estado: 'verificando_pago',
       latitud: metodoEntrega.value === 'envio' ? markerLatLng.value[0] : null,
       longitud: metodoEntrega.value === 'envio' ? markerLatLng.value[1] : null,
+      total_bs: totalInBolivares.value
     }
+    // --- FIN DE LA MODIFICACIÓN ---
+
     const { data: pedidoData, error: pedidoError } = await supabase.from('pedidos').insert(pedidoParaGuardar).select('id').single()
     if (pedidoError) throw pedidoError
     const pedidoId = pedidoData.id
@@ -231,31 +272,29 @@ async function procesarPedido() {
     const { error: detallesError } = await supabase.from('detalles_pedido').insert(detallesPedido)
     if (detallesError) throw detallesError
 
-    // Modificamos el objeto de pago para que coincida con la nueva estructura
     const { error: pagoError } = await supabase.from('pagos').insert({
       pedido_id: pedidoId,
       nro_referencia: pago.value.referencia,
       monto: cartStore.finalTotal,
-      metodo_pago_id: pago.value.metodo_pago_id, // <-- Campo nuevo y clave
-      fecha: fechaTransaccion.value || new Date(), // <-- Guardamos la fecha actual del pago
+      metodo_pago_id: pago.value.metodo_pago_id,
+      fecha: fechaTransaccion.value || new Date(),
     })
     if (pagoError) throw pagoError
 
     if (appliedCouponId) {
       await incrementCouponUsage(appliedCouponId)
     }
-    // console log de fecha
-    console.log('Fecha de transacción:', fechaTransaccion.value)
+
     cartStore.clearCart()
 
     router.push(`/confirmation/${pedidoId}`)
   } catch (error) {
     toast.error('Hubo un error al procesar tu pedido.')
-    console.error(error) // <-- Es bueno dejar el log para depuración
+    console.error(error)
   } finally {
     procesando.value = false
   }
-} // <-- 7. FUNCIÓN DE PROCESAR PEDIDO ACTUALIZADA
+}
 </script>
 
 <template>
@@ -350,21 +389,37 @@ async function procesarPedido() {
             <p>Para pagos con <strong>Zelle</strong>, por favor contáctanos vía WhatsApp para coordinar.</p>
           </div>
           <label class="block mb-2">
-            <span class="text-gray-700 font-medium text-sm">Monto</span>
-            <input :value="cartStore.finalTotal.toFixed(2)" type="number" step="0.01" placeholder="Monto Exacto"
-              required class="w-full font-bold p-2 border rounded-md bg-gray-100" readonly>
+            <span class="text-gray-700 font-medium text-sm">Monto en Dólares (USD)</span>
+            <input :value="cartStore.finalTotal.toFixed(2)" type="number"
+              class="w-full font-bold p-2 border rounded-md bg-gray-100" readonly>
           </label>
+
+          <div v-if="selectedPaymentMethod?.tipo === 'pago-movil' || selectedPaymentMethod?.tipo === 'transferencia'"
+            class="mb-4">
+            <div v-if="isLoadingRate" class="text-left text-gray-500 text-sm p-2 bg-gray-50 rounded-md">
+              Calculando monto en bolívares...
+            </div>
+
+            <div v-if="totalInBolivares && !isLoadingRate">
+              <label class="block">
+                <span class="text-gray-700 font-medium text-sm">Monto en Bolívares (VES)</span>
+                <input
+                  :value="totalInBolivares.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"
+                  type="text" class="w-full font-bold p-2 border rounded-md bg-gray-100" readonly>
+              </label>
+            </div>
+          </div>
           <div v-if="showPaymentReference" class="space-y-4">
             <label class="block">
               <span class="text-gray-700 font-medium text-sm">Nro. de Referencia o Transacción</span>
-              <input v-model="pago.referencia" type="text" placeholder="Ej: 00123456"
+              <input v-model="pago.referencia" type="text"
                 class="mt-1 block w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none"
                 :required="showPaymentReference" />
             </label>
             <label class="block">
               <span class="text-gray-700 font-medium text-sm">Fecha de la Transacción</span>
               <input v-model="fechaTransaccion" type="date" :max="maxDate"
-                class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50"
+                class="mt-1 block w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none"
                 :required="showPaymentReference">
             </label>
           </div>
@@ -374,6 +429,7 @@ async function procesarPedido() {
       <div class="lg:col-span-1">
         <div class="bg-white p-6 rounded-lg shadow-md sticky top-28">
           <h2 class="text-2xl font-bold border-b pb-4">Resumen del Pedido</h2>
+
           <ul class="space-y-2 my-4">
             <li v-for="item in cartStore.items" :key="item.id" class="flex justify-between">
               <span>{{ item.nombre }} x {{ item.quantity }}</span>
@@ -381,7 +437,7 @@ async function procesarPedido() {
             </li>
           </ul>
 
-          <div class="border-t pt-4">
+          <div class="border-t pt-2">
             <a v-if="!cartStore.appliedCoupon" @click="showCouponInput = !showCouponInput"
               class="text-sm text-brand-fucsia font-semibold cursor-pointer hover:underline">
               ¿Tienes un cupón?
@@ -396,7 +452,7 @@ async function procesarPedido() {
             </Transition>
           </div>
 
-          <div class="space-y-2 mt-4 pt-4 border-t">
+          <div class="space-y-2 mt-4 pt-2 border-t">
             <div class="flex justify-between items-center">
               <p class="text-gray-600">Subtotal</p>
               <p class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</p>
@@ -413,11 +469,32 @@ async function procesarPedido() {
               <p>Total a Pagar</p>
               <p class="text-brand-fucsia text-xl">${{ cartStore.finalTotal.toFixed(2) }}</p>
             </div>
+
+            <div v-if="selectedPaymentMethod?.tipo === 'pago-movil' || selectedPaymentMethod?.tipo === 'transferencia'"
+              class="mt-3 pt-3 border-t border-dashed">
+
+              <div v-if="isLoadingRate" class="text-center text-gray-500">
+                <p>Buscando tasa del BCV...</p>
+              </div>
+
+              <div v-if="totalInBolivares && !isLoadingRate">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Total en Bolívares (Aprox.)</span>
+                  <span class="font-semibold text-lg">{{ totalInBolivares.toLocaleString('es-VE', {
+                    minimumFractionDigits: 2, maximumFractionDigits: 2
+                  }) }} Bs.</span>
+                </div>
+                <p class="text-right text-xs text-gray-400 mt-1">
+                  Tasa de Referencia: {{ exchangeRate.toFixed(2) }} Bs. por USD
+                </p>
+              </div>
+            </div>
           </div>
 
-          <CustomButton type="submit" :disabled="procesando" class="w-full mt-6">
+          <CustomButton @click="procesarPedido" :disabled="procesando" class="w-full mt-6">
             {{ procesando ? 'Procesando...' : 'Finalizar Pedido' }}
           </CustomButton>
+
         </div>
       </div>
     </form>
