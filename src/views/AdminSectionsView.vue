@@ -153,6 +153,7 @@ function promptDeleteSection(section) {
   showDeleteModal.value = true
 }
 
+
 async function handleDeleteSection() {
   if (!sectionToDelete.value) return
   try {
@@ -174,11 +175,12 @@ onMounted(fetchSections)
 </script>
 
 <template>
-  <div class="p-6">
+  <div class="p-4 md:p-6">
     <h1 class="text-3xl font-bold mb-6 text-brand-morado">Gestión de Secciones del Catálogo</h1>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
+    <div class="flex flex-col lg:flex-row gap-8">
+
+      <div class="w-full lg:w-1/3 bg-white p-4 md:p-6 rounded-lg shadow-md">
         <h2 class="text-xl font-bold mb-4">Secciones</h2>
         <div class="flex items-center gap-2 mb-4">
           <input type="text" v-model="newSectionName" placeholder="Nombre de la sección"
@@ -187,6 +189,7 @@ onMounted(fetchSections)
             <PlusIcon class="w-6 h-6" />
           </button>
         </div>
+
         <draggable v-if="!loading.sections" v-model="draggableSections" item-key="id" tag="ul" class="space-y-2"
           handle=".handle" @end="handleOrderChange">
           <template #item="{ element: section }">
@@ -194,12 +197,10 @@ onMounted(fetchSections)
               'bg-pink-200': selectedSection?.id === section.id && !editingSectionId,
               'hover:border-gray-300 hover:bg-gray-100': !editingSectionId
             }">
-
               <Bars3Icon class="w-6 h-6 text-gray-400 cursor-move handle" />
-
               <div class="flex-grow" @click="selectSection(section)" :class="{ 'cursor-pointer': !editingSectionId }">
-                <div v-if="editingSectionId !== section.id" class="flex items-center justify-between gap-2">
-                  <span class="font-semibold">{{ section.nombre }}</span>
+                <div v-if="editingSectionId !== section.id" class="flex items-center justify-between gap-2 flex-wrap">
+                  <span class="font-semibold mr-2">{{ section.nombre }}</span>
                   <div class="flex items-center gap-2 flex-shrink-0">
                     <ToggleSwitch v-model="section.activo" @update:modelValue="handleToggleStatus(section)"
                       @click.stop />
@@ -229,12 +230,13 @@ onMounted(fetchSections)
             </li>
           </template>
         </draggable>
+
         <div v-else>
           <SkeletonLoader v-for="n in 3" :key="n" class="h-16 w-full mb-2" />
         </div>
       </div>
 
-      <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
+      <div class="w-full lg:w-2/3 bg-white p-4 md:p-6 rounded-lg shadow-md">
         <div v-if="!selectedSection">
           <p class="text-gray-500 text-center py-10">Selecciona una sección de la izquierda para empezar a añadir
             productos.
@@ -245,28 +247,28 @@ onMounted(fetchSections)
               }}</span>
           </h2>
           <div v-if="loading.products" class="text-center py-10">Cargando productos...</div>
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="order-2 md:order-1">
+          <div v-else class="flex flex-col md:flex-row gap-6">
+            <div class="w-full md:w-1/2">
               <h3 class="font-semibold mb-2">Productos en esta sección ({{ productsInSection.length }})</h3>
               <ul class="h-96 overflow-y-auto space-y-2 p-2 bg-gray-50 rounded-md border">
                 <li v-for="product in productsInSection" :key="product.id"
                   class="flex items-center gap-3 p-2 bg-white rounded shadow">
-                  <img :src="product.foto_url" class="w-10 h-10 object-cover rounded">
+                  <img :src="product.foto_url" class="w-10 h-10 object-cover rounded flex-shrink-0">
                   <span class="flex-grow text-sm">{{ product.nombre }}</span>
                   <button @click="removeProduct(product)"
-                    class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center">-</button>
+                    class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">-</button>
                 </li>
               </ul>
             </div>
-            <div class="order-1 md:order-2">
+            <div class="w-full md:w-1/2">
               <h3 class="font-semibold mb-2">Productos disponibles ({{ availableProducts.length }})</h3>
               <ul class="h-96 overflow-y-auto space-y-2 p-2 bg-gray-50 rounded-md border">
                 <li v-for="product in availableProducts" :key="product.id"
                   class="flex items-center gap-3 p-2 bg-white rounded shadow">
-                  <img :src="product.foto_url" class="w-10 h-10 object-cover rounded">
+                  <img :src="product.foto_url" class="w-10 h-10 object-cover rounded flex-shrink-0">
                   <span class="flex-grow text-sm">{{ product.nombre }}</span>
                   <button @click="addProduct(product)"
-                    class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center">+</button>
+                    class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0">+</button>
                 </li>
               </ul>
             </div>

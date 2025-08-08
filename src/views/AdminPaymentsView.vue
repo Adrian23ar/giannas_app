@@ -1,4 +1,5 @@
 <script setup>
+// src/views/AdminPaymentsView.vue
 import { ref, onMounted, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import { paymentMethodService } from '@/services/paymentMethodService';
@@ -198,11 +199,11 @@ function getDetailsSummary(method) {
             </select>
           </label>
 
-          <div class="flex justify-end items-center gap-4 pt-4 border-t">
-            <CustomButton v-if="isEditing" @click="cancelEdit" variant="secondary">
+          <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-4 pt-4 border-t">
+            <CustomButton v-if="isEditing" @click="cancelEdit" variant="secondary" class="w-full sm:w-auto">
               <XCircleIcon class="h-5 w-5" /> Cancelar
             </CustomButton>
-            <CustomButton type="submit">
+            <CustomButton type="submit" class="w-full sm:w-auto">
               <PlusIcon v-if="!isEditing" class="h-5 w-5" />
               <PencilSquareIcon v-else class="h-5 w-5" />
               {{ isEditing ? 'Actualizar' : 'Guardar' }}

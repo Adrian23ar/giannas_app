@@ -40,7 +40,7 @@ watch(route, () => {
 
     <aside class="fixed top-0 left-0 h-full bg-[#4C1831] text-white transition-all duration-300 z-20"
       :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'"
-      :style="{ width: isSidebarOpen ? '256px' : '80px' }">
+      :style="{ width: isSidebarOpen ? '16rem' : '5rem' }">
       <div class="flex items-center h-20 border-b border-white/10"
         :class="isSidebarOpen ? 'justify-between pt-2 px-6' : 'justify-center pt-2 px-1'">
         <img src="/logo-giannas.png" alt="Logo" :class="isSidebarOpen ? 'h-16' : 'h-auto'">
@@ -111,7 +111,7 @@ watch(route, () => {
                 <path stroke-linecap="round" stroke-linejoin="round"
                   d="M12 15.75a.75.75 0 01.75.75v-1.5a.75.75 0 01-.75.75z" />
               </svg>
-              <span>Pedidos Especiales</span>
+              <span v-if="isSidebarOpen">Pedidos Especiales</span>
             </RouterLink>
           </li>
         </ul>
@@ -126,7 +126,7 @@ watch(route, () => {
     </aside>
 
     <div class="transition-all duration-300" :class="isSidebarOpen ? 'md:ml-64' : 'md:ml-20'">
-      <header class="h-20 flex items-center justify-between bg-white shadow-sm px-6">
+      <header class="h-20 fixed w-full flex z-10 items-center justify-between bg-white shadow-sm px-6">
         <button @click="isSidebarOpen = !isSidebarOpen">
           <Bars3Icon class="h-6 w-6 text-gray-700" />
         </button>
@@ -135,7 +135,7 @@ watch(route, () => {
         <AdminNotificationBell />
 
       </header>
-      <main class="p-4 md:p-6 max-w-8xl mx-auto">
+      <main class="pt-28 p-6 max-w-8xl mx-auto">
         <RouterView v-slot="{ Component }">
           <Transition name="fade" mode="out-in">
             <component :is="Component" />

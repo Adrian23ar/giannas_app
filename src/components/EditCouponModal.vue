@@ -33,7 +33,7 @@ function saveChanges() {
             <span class="text-gray-700 text-sm font-medium">Código del Cupón</span>
             <input v-model="editableCoupon.codigo" type="text" required class="mt-1 block w-full p-2 border rounded-md shadow-sm">
           </label>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label class="block">
               <span class="text-gray-700 text-sm font-medium">Tipo de Descuento</span>
               <select v-model="editableCoupon.tipo" class="mt-1 block w-full p-2 border rounded-md shadow-sm">
@@ -46,7 +46,7 @@ function saveChanges() {
               <input v-model="editableCoupon.valor" type="number" step="0.01" required class="mt-1 block w-full p-2 border rounded-md shadow-sm">
             </label>
           </div>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label class="block">
               <span class="text-gray-700 text-sm font-medium">Usos Máximos (opcional)</span>
               <input v-model="editableCoupon.usos_maximos" type="number" placeholder="Sin límite" class="mt-1 block w-full p-2 border rounded-md shadow-sm">

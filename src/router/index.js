@@ -45,13 +45,13 @@ const router = createRouter({
       children: [
         // Chart.js y otras librerías de admin solo se cargarán al entrar a estas rutas
         { path: '', name: 'admin-dashboard', component: () => import('../views/AdminDashboardView.vue') },
-        { path: 'productos', name: 'admin-productos', component: () => import('../views/AdminProductosView.vue') },
-        { path: 'categorias', name: 'admin-categorias', component: () => import('../views/AdminCategoriasView.vue') },
-        { path: 'pedidos', name: 'admin-pedidos', component: () => import('../views/AdminPedidosView.vue') },
-        { path: 'cupones', name: 'admin-cupones', component: () => import('../views/AdminCuponesView.vue') },
-        { path: 'metodos-pago', name: 'admin-metodos-pago', component: () => import('../views/AdminPaymentsView.vue') },
-        { path: 'secciones', name: 'admin-seccion', component: () => import('@/views/AdminSectionsView.vue') },
-        { path: 'pedidos-especiales', name: 'admin-special-orders', component: () => import('@/views/AdminSpecialOrdersView.vue') }
+        { path: 'productos', name: 'Productos', component: () => import('../views/AdminProductosView.vue') },
+        { path: 'categorias', name: 'Categorias', component: () => import('../views/AdminCategoriasView.vue') },
+        { path: 'pedidos', name: 'Pedidos', component: () => import('../views/AdminPedidosView.vue') },
+        { path: 'cupones', name: 'Cupones', component: () => import('../views/AdminCuponesView.vue') },
+        { path: 'metodos-pago', name: 'Metodos de Pago', component: () => import('../views/AdminPaymentsView.vue') },
+        { path: 'secciones', name: 'Secciones', component: () => import('@/views/AdminSectionsView.vue') },
+        { path: 'pedidos-especiales', name: 'Pedidos Especiales', component: () => import('@/views/AdminSpecialOrdersView.vue') }
       ],
     },
   ],

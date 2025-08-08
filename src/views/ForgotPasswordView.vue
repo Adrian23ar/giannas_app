@@ -1,4 +1,5 @@
 <script setup>
+// src/views/ForgotPasswordView.vue
 import { ref } from 'vue'
 import { useToast } from 'vue-toastification'
 import { sendPasswordResetEmail } from '@/services/authService'
