@@ -23,7 +23,6 @@ const direccion = ref('')
 const procesando = ref(false)
 
 // --- MODIFICACIÓN DEL OBJETO 'pago' ---
-// Eliminamos banco_emisor y fecha, y añadimos metodo_pago_id
 const pago = ref({
   referencia: '',
   metodo_pago_id: null
@@ -64,6 +63,23 @@ const zoom = ref(14);
 const mapCenter = ref([10.196, -71.313])
 const markerLatLng = ref([10.196, -71.313])
 const isLocating = ref(false);
+
+// ----- 1. INICIO DEL CAMBIO: PROPIEDAD COMPUTADA -----
+// Esta propiedad determina si debemos mostrar los campos de referencia y fecha.
+// Devuelve 'true' a menos que sea Recogida Y Efectivo.
+const showPaymentReference = computed(() => {
+  // Si no se ha seleccionado un método de pago, mostramos los campos por defecto.
+  if (!selectedPaymentMethod.value) {
+    return true;
+  }
+  // La condición para OCULTAR: método de entrega es 'recogida' Y el nombre del método es 'Efectivo'.
+  const hideCondition =
+    metodoEntrega.value === 'recogida' &&
+    selectedPaymentMethod.value.nombre.toLowerCase() === 'efectivo';
+
+  return !hideCondition; // Devolvemos lo contrario a la condición de ocultar.
+})
+// ----- FIN DEL CAMBIO -----
 
 // --- MODIFICACIÓN DEL onMounted ---
 onMounted(async () => {
@@ -175,10 +191,15 @@ function handleRemoveCoupon() {
 // --- FUNCIÓN procesarPedido ACTUALIZADA ---
 async function procesarPedido() {
   if (cartStore.items.length === 0) return toast.error('Tu carrito está vacío.')
-  // Añadimos validaciones
   if (!pago.value.metodo_pago_id) return toast.error('Debes seleccionar un método de pago.');
-  if (!pago.value.referencia) return toast.error('Debes colocar el número de referencia.');
 
+  // ----- 2. INICIO DEL CAMBIO: VALIDACIÓN CONDICIONAL -----
+  // Solo validamos la referencia si los campos son visibles.
+  if (showPaymentReference.value) {
+    if (!pago.value.referencia) return toast.error('Debes colocar el número de referencia.');
+    if (!fechaTransaccion.value) return toast.error('Debes seleccionar la fecha de la transacción.');
+  }
+  // ----- FIN DEL CAMBIO -----
   procesando.value = true
 
   const appliedCouponId = cartStore.appliedCoupon?.id
@@ -216,13 +237,15 @@ async function procesarPedido() {
       nro_referencia: pago.value.referencia,
       monto: cartStore.finalTotal,
       metodo_pago_id: pago.value.metodo_pago_id, // <-- Campo nuevo y clave
-      fecha: fechaTransaccion.value // <-- Guardamos la fecha actual del pago
+      fecha: fechaTransaccion.value || new Date(), // <-- Guardamos la fecha actual del pago
     })
     if (pagoError) throw pagoError
 
     if (appliedCouponId) {
       await incrementCouponUsage(appliedCouponId)
     }
+    // console log de fecha
+    console.log('Fecha de transacción:', fechaTransaccion.value)
     cartStore.clearCart()
 
     router.push(`/confirmation/${pedidoId}`)
@@ -327,21 +350,25 @@ async function procesarPedido() {
             <p>Para pagos con <strong>Zelle</strong>, por favor contáctanos vía WhatsApp para coordinar.</p>
           </div>
           <label class="block mb-2">
-            <span class="text-gray-700 font-medium text-sm">Nro. de Referencia o Transacción</span>
-            <input v-model="pago.referencia" type="text" placeholder="Ej: 00123456"
-              class="mt-1 block w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none"
-              required />
-          </label>
-          <label class="block mb-2">
-            <span class="text-gray-700 font-medium text-sm">Fecha de la Transacción</span>
-            <input v-model="fechaTransaccion" type="date" required :max="maxDate"
-              class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50">
-          </label>
-          <label class="block mb-2">
             <span class="text-gray-700 font-medium text-sm">Monto</span>
             <input :value="cartStore.finalTotal.toFixed(2)" type="number" step="0.01" placeholder="Monto Exacto"
-              required class="w-full p-2 border rounded-md bg-gray-100" readonly>
+              required class="w-full font-bold p-2 border rounded-md bg-gray-100" readonly>
           </label>
+          <div v-if="showPaymentReference" class="space-y-4">
+            <label class="block">
+              <span class="text-gray-700 font-medium text-sm">Nro. de Referencia o Transacción</span>
+              <input v-model="pago.referencia" type="text" placeholder="Ej: 00123456"
+                class="mt-1 block w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia focus-within:outline-none"
+                :required="showPaymentReference" />
+            </label>
+            <label class="block">
+              <span class="text-gray-700 font-medium text-sm">Fecha de la Transacción</span>
+              <input v-model="fechaTransaccion" type="date" :max="maxDate"
+                class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:border-brand-fucsia focus:ring focus:ring-brand-fucsia focus:ring-opacity-50"
+                :required="showPaymentReference">
+            </label>
+          </div>
+
         </div>
       </div>
       <div class="lg:col-span-1">

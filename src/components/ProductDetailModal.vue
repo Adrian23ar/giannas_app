@@ -87,7 +87,10 @@ function onAddToCart() {
         </div>
 
         <div class="w-full md:w-1/2 px-6 md:order-last order-first">
+          <div class="bg-white p-1 rounded-2xl">
           <img :src="product.foto_url" :alt="product.nombre" class="w-full h-60 md:h-80 object-cover rounded-xl">
+
+          </div>
         </div>
       </div>
     </div>

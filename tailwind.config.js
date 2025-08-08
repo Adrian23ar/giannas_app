@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-      sans: ['Poppins', 'sans-serif'], // <-- Añade esta línea
+      sans: ['Quicksand', 'sans-serif'],
     },
       colors: {
         'brand-fucsia': '#CC146C',
