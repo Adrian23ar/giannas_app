@@ -118,7 +118,7 @@ const downloadReceipt = async (format) => {
       <h1 class="text-4xl font-bold text-green-600">¡Gracias por tu pedido!</h1>
       <p class="text-gray-800 mt-4 text-lg">Hemos recibido tu orden y estamos procesando la verificación de tu pago.</p>
       <p class="text-gray-600 mt-2">Puedes verificar el estado de tu pedido con tu numero de orden en la sección de <span
-          class="font-semibold">"Seguimiento".</span></p>
+          class="font-semibold">"Seguimiento".</span> <span class="font-bold"> NO</span> olvides conservar este recibo.</p>
 
       <div class="mt-10">
         <OrderReceipt :details="orderDetails" />

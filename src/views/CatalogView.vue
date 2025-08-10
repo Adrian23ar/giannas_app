@@ -13,8 +13,8 @@ import ProductCard from '@/components/ProductCard.vue'
 import ProductDetailModal from '@/components/ProductDetailModal.vue'
 import ProductSlider from '@/components/ProductSlider.vue'
 import ProductFilters from '@/components/ProductFilters.vue'
-import heroBanner from '@/assets/welcome.png'
-import comoComprarBanner from '@/assets/como_comprar.png'
+
+// Importamos todos los assets que usaremos en la vista
 import comprar_2 from '@/assets/2.png'
 import comprar_3 from '@/assets/3.png'
 import comprar_4 from '@/assets/4.png'
@@ -142,8 +142,16 @@ onMounted(fetchInitialData)
   <div class="pb-8 px-4 sm:px-6 lg:px-8">
 
     <section class="mb-16">
-      <img :src="heroBanner" alt="Bienvenido a Gianna's Cookies"
-        class="w-full h-40 md:h-auto rounded-lg shadow-lg object-cover" />
+      <picture>
+        <source media="(max-width: 680px)" srcset="/welcome.webp">
+
+        <source media="(min-width: 681px)"
+          srcset="/welcome-640w.webp 640w, /welcome-768w.webp 768w, /welcome-1024w.webp 1024w, /welcome-1280w.webp 1280w, /welcome-1536w.webp 1536w, /welcome-1872w.webp 1872w"
+          sizes="(max-width: 1872px) 100vw, 1872px">
+
+        <img src="/welcome-1536w.webp" alt="Bienvenido a Gianna's Cookies" width="1872" height="480" loading="lazy"
+          class="w-full md:h-auto rounded-lg shadow-lg object-cover">
+      </picture>
     </section>
 
     <div v-if="loading.initial" class="text-center py-12">
@@ -159,12 +167,17 @@ onMounted(fetchInitialData)
 
       <div>
         <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14 bg-brand-morado rounded-lg p-4 lg:p-8">
-          <h2 class="text-2xl sm:text-3xl font-bold col-span-2 md:col-span-4 text-center text-white">Comprar es muy fácil</h2>
+          <h2 class="text-2xl sm:text-3xl font-bold col-span-2 md:col-span-4 text-center text-white">Comprar es muy
+            fácil</h2>
 
-          <img :src="comprar_2" alt="Pasos para comprar en Gianna's Cookies" class="w-full h-32 lg:h-52 rounded object-contain" />
-          <img :src="comprar_3" alt="Pasos para comprar en Gianna's Cookies" class="w-full h-32 lg:h-52 rounded object-contain" />
-          <img :src="comprar_4" alt="Pasos para comprar en Gianna's Cookies" class="w-full h-32 lg:h-52 rounded object-contain" />
-          <img :src="comprar_5" alt="Pasos para comprar en Gianna's Cookies" class="w-full h-32 lg:h-52 rounded object-contain" />
+          <img :src="comprar_2" alt="Pasos para comprar en Gianna's Cookies"
+            class="w-full h-32 lg:h-52 rounded object-contain" />
+          <img :src="comprar_3" alt="Pasos para comprar en Gianna's Cookies"
+            class="w-full h-32 lg:h-52 rounded object-contain" />
+          <img :src="comprar_4" alt="Pasos para comprar en Gianna's Cookies"
+            class="w-full h-32 lg:h-52 rounded object-contain" />
+          <img :src="comprar_5" alt="Pasos para comprar en Gianna's Cookies"
+            class="w-full h-32 lg:h-52 rounded object-contain" />
         </section>
 
         <div class="text-center md:text-left">
