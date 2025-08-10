@@ -13,6 +13,12 @@ import ProductCard from '@/components/ProductCard.vue'
 import ProductDetailModal from '@/components/ProductDetailModal.vue'
 import ProductSlider from '@/components/ProductSlider.vue'
 import ProductFilters from '@/components/ProductFilters.vue'
+import heroBanner from '@/assets/welcome.png'
+import comoComprarBanner from '@/assets/como_comprar.png'
+import comprar_2 from '@/assets/2.png'
+import comprar_3 from '@/assets/3.png'
+import comprar_4 from '@/assets/4.png'
+import comprar_5 from '@/assets/5.png'
 
 // --- ESTADO PRINCIPAL DE LA VISTA ---
 const cartStore = useCartStore()
@@ -133,41 +139,61 @@ onMounted(fetchInitialData)
 </script>
 
 <template>
-  <div>
+  <div class="pb-8 px-4 sm:px-6 lg:px-8">
+
+    <section class="mb-16">
+      <img :src="heroBanner" alt="Bienvenido a Gianna's Cookies"
+        class="w-full h-40 md:h-auto rounded-lg shadow-lg object-cover" />
+    </section>
+
     <div v-if="loading.initial" class="text-center py-12">
       <p class="text-gray-500 text-lg">Cargando delicias...</p>
     </div>
 
     <div v-else>
-      <div v-if="sections.length > 0">
+
+      <div v-if="sections.length > 0" class="space-y-16 mb-16">
         <ProductSlider v-for="section in sections" :key="section.id" :section="section"
           @show-details="handleShowDetails" @add-to-cart="handleAddToCartFromCard" />
       </div>
 
-      <h1 class="text-4xl font-bold text-brand-morado mb-2 mt-12">Nuestro Dulce Catálogo</h1>
-      <p class="text-gray-600 mb-8">Encuentra tus galletas favoritas.</p>
-
-      <ProductFilters :categories="categories" :initial-filters="filters"
-        @filters-changed="(newFilters) => filters = newFilters" />
-
       <div>
-        <div v-if="loading.products" class="text-center py-16">
-          <p class="font-semibold text-gray-600">Buscando delicias...</p>
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14 bg-brand-morado rounded-lg p-4 lg:p-8">
+          <h2 class="text-2xl sm:text-3xl font-bold col-span-2 md:col-span-4 text-center text-white">Comprar es muy fácil</h2>
+
+          <img :src="comprar_2" alt="Pasos para comprar en Gianna's Cookies" class="w-full h-32 lg:h-52 rounded object-contain" />
+          <img :src="comprar_3" alt="Pasos para comprar en Gianna's Cookies" class="w-full h-32 lg:h-52 rounded object-contain" />
+          <img :src="comprar_4" alt="Pasos para comprar en Gianna's Cookies" class="w-full h-32 lg:h-52 rounded object-contain" />
+          <img :src="comprar_5" alt="Pasos para comprar en Gianna's Cookies" class="w-full h-32 lg:h-52 rounded object-contain" />
+        </section>
+
+        <div class="text-center md:text-left">
+          <h1 class="text-3xl sm:text-4xl font-bold text-brand-morado mb-2">Nuestro Dulce Catálogo</h1>
+          <p class="text-gray-600 mb-8">Encuentra tus galletas, brownies y postres favoritos.</p>
         </div>
 
-        <div v-else>
-          <div v-if="products.length > 0" class="grid justify-items-center grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-2">
-            <ProductCard v-for="producto in products" :key="producto.id" :producto="producto"
-              :is-recently-added="recentlyAddedInCardId === producto.id" @show-details="handleShowDetails(producto)"
-              @add-to-cart="handleAddToCartFromCard(producto)" />
+        <ProductFilters :categories="categories" :initial-filters="filters"
+          @filters-changed="(newFilters) => filters = newFilters" class="mb-8" />
+
+        <div>
+          <div v-if="loading.products" class="text-center py-24">
+            <p class="font-semibold text-gray-600 text-lg">Buscando delicias...</p>
           </div>
-          <div v-else class="text-center py-16 bg-gray-50 rounded-lg">
-            <p class="font-bold text-xl text-gray-700">No se encontraron productos</p>
-            <p class="text-gray-500 mt-2">Intenta cambiar los filtros o limpiar la búsqueda.</p>
+
+          <div v-else>
+            <div v-if="products.length > 0" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              <ProductCard v-for="producto in products" :key="producto.id" :producto="producto"
+                :is-recently-added="recentlyAddedInCardId === producto.id" @show-details="handleShowDetails(producto)"
+                @add-to-cart="handleAddToCartFromCard(producto)" />
+            </div>
+
+            <div v-else class="text-center py-24 bg-gray-50 rounded-lg">
+              <p class="font-bold text-2xl text-gray-700">No se encontraron productos</p>
+              <p class="text-gray-500 mt-2">Intenta cambiar los filtros o limpiar la búsqueda.</p>
+            </div>
           </div>
         </div>
       </div>
-
     </div>
 
     <ProductDetailModal :show="isModalVisible" :product="selectedProduct"

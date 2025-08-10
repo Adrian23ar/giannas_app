@@ -15,12 +15,12 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
 <template>
   <div class="font-sans bg-brand-blanco">
     <header class="shadow-md fixed bg-brand-fucsia w-full top-0 z-[9999]">
-      <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <nav class="container mx-auto px-8 xl:px-8 py-4 flex justify-between items-center">
         <RouterLink to="/">
           <img src="/logo-giannas.png" alt="Logo Gianna's Cookies" class="h-12">
         </RouterLink>
 
-        <div class="hidden md:flex items-center gap-6 pr-8 lg:pr-0">
+        <div class="hidden lg:flex items-center gap-6 pr-8 lg:pr-0">
           <RouterLink to="/" class="text-brand-blanco hover:text-brand-morado transition-all font-medium">Catálogo
           </RouterLink>
 
@@ -58,7 +58,7 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
 
         </div>
 
-        <div class="md:hidden flex items-center">
+        <div class="lg:hidden flex items-center">
           <RouterLink to="/cart"
             class="relative text-brand-blanco hover:text-brand-morado transition-all font-medium mr-6">
             <ShoppingCartIcon class="h-6 w-6" /> <span
@@ -79,7 +79,7 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
         </div>
       </nav>
       <Transition name="slide-fade">
-        <div v-if="isMobileMenuOpen" class="md:hidden shadow-lg">
+        <div v-if="isMobileMenuOpen" class="lg:hidden shadow-lg">
           <div class="flex flex-col px-4 pt-2 pb-4 gap-3">
             <RouterLink @click="isMobileMenuOpen = false" to="/"
               class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Catálogo</RouterLink>

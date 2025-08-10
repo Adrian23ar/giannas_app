@@ -1,4 +1,5 @@
 <script setup>
+// src/components/ProductCard.vue
 import { ShoppingCartIcon } from '@heroicons/vue/24/outline'
 
 defineProps({
@@ -25,21 +26,21 @@ function onShowDetails() {
 
 <template>
   <div
-    class="bg-brand-rosa md:bg-brand-rosa p-3 rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform duration-300 w-full max-w-60 lg:max-w-72 flex flex-col mb-3">
-    <div class="relative bg-white p-2 rounded-xl">
-      <img :src="producto.foto_url" :alt="producto.nombre" class="w-full h-40 md:h-56 object-cover rounded-lg">
+    class="bg-brand-rosa md:bg-brand-rosa p-3 rounded-2xl shadow-lg transform hover:scale-[1.01] transition-transform duration-300 w-full max-w-60 lg:max-w-72 flex flex-col mb-2">
+    <div class="relative bg-white p-1 md:p-2  rounded-xl">
+      <img :src="producto.foto_url" :alt="producto.nombre" class="w-full h-36 sm:h-44 md:h-56 object-cover rounded-lg">
     </div>
 
     <div class="pt-4 px-2 flex-grow flex flex-col">
       <div>
-        <h2 class="text-lg font-semibold text-brand-morado">{{ producto.nombre }}</h2>
-        <p class="text-gray-600 text-sm mt-1">{{ producto.categorias?.nombre || 'Galleta' }}</p>
+        <h2 class="lg:text-lg font-semibold text-brand-morado">{{ producto.nombre }}</h2>
+        <p class="text-gray-700 text-xs lg:text-sm mt-1">{{ producto.categorias?.nombre || 'Galleta' }}</p>
       </div>
 
       <div class="flex-grow"></div>
 
       <div class="my-3 text-right">
-        <p class="text-xl md:text-xl font-semibold text-brand-morado">{{ producto.precio.toFixed(2) }}$</p>
+        <p class="text-lg sm:text-xl md:text-xl font-semibold text-brand-morado">{{ producto.precio.toFixed(2) }}$</p>
       </div>
       <div class="flex items-center gap-3">
         <button @click="onShowDetails"
