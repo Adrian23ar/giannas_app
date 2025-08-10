@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { createSpecialOrder } from '@/services/specialOrderService'
@@ -30,10 +30,52 @@ onMounted(() => {
   }
 })
 
+// 1. Crea una referencia para el contenedor del reCAPTCHA
+const recaptchaContainer = ref(null)
+const recaptchaWidgetId = ref(null) // Para guardar el ID del widget
+
+// Función que renderizará el reCAPTCHA
+const renderRecaptcha = () => {
+  // Asegúrate de que el contenedor existe y que la API 'grecaptcha' está disponible
+  if (recaptchaContainer.value && window.grecaptcha) {
+    window.grecaptcha.ready(() => {
+      recaptchaWidgetId.value = window.grecaptcha.render(recaptchaContainer.value, {
+        'sitekey': '6LegfJ8rAAAAABWBru2sS_rlb5G7GHPie-V4ZD8-',
+        // Opcional: puedes añadir un callback para obtener el token
+        // 'callback': (token) => {
+        //   console.log('reCAPTCHA token:', token);
+        //   // Aquí guardarías el token para enviarlo con el formulario
+        // }
+      });
+    });
+  }
+};
+
+onMounted(() => {
+  // Si el script ya se cargó antes de que el componente se montara
+  if (window.grecaptcha && window.grecaptcha.render) {
+    renderRecaptcha();
+  } else {
+    // Si no, escucha el evento personalizado que creamos en index.html
+    window.addEventListener('recaptcha-loaded', renderRecaptcha);
+  }
+});
+
+// Es una buena práctica limpiar el listener cuando el componente se destruye
+onUnmounted(() => {
+  window.removeEventListener('recaptcha-loaded', renderRecaptcha);
+});
+
 async function handleSubmit() {
   // ----- INICIO DEL CAMBIO: VALIDACIÓN ACTUALIZADA -----
   if (!form.value.nombre_completo || !form.value.email || !form.value.descripcion_pedido || !form.value.telefono) {
     toast.error('Por favor, completa todos los campos obligatorios (*).');
+    return;
+  }
+  // Es recomendable verificar que el usuario completó el reCAPTCHA antes de enviar
+  const recaptchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId.value);
+  if (!recaptchaResponse) {
+    toast.error('Por favor, completa el reCAPTCHA.');
     return;
   }
   // ----- FIN DEL CAMBIO -----
@@ -112,8 +154,10 @@ async function handleSubmit() {
           required class="w-full p-3 border rounded-md"></textarea>
       </div>
 
-      <div class="text-center pt-6">
-        <CustomButton type="submit" :disabled="loading">
+      <div class="flex justify-center flex-col text-center pt-2">
+        <div class="mx-auto" ref="recaptchaContainer"></div>
+
+        <CustomButton class="mx-auto mt-4" type="submit" :disabled="loading">
           {{ loading ? 'Enviando Solicitud...' : 'Enviar Solicitud de Cotización' }}
         </CustomButton>
       </div>

@@ -1,6 +1,6 @@
 <script setup>
 // src/views/CheckoutView.vue
-import { ref, computed, onMounted, watch } from 'vue' // <-- Añadido 'watch'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue' // <-- Añadido 'watch'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cartStore'
 import { useUserStore } from '@/stores/userStore'
@@ -86,6 +86,42 @@ const showPaymentReference = computed(() => {
   return !hideCondition; // Devolvemos lo contrario a la condición de ocultar.
 })
 // ----- FIN DEL CAMBIO -----
+
+// 1. Crea una referencia para el contenedor del reCAPTCHA
+const recaptchaContainer = ref(null)
+const recaptchaWidgetId = ref(null) // Para guardar el ID del widget
+
+// Función que renderizará el reCAPTCHA
+const renderRecaptcha = () => {
+  // Asegúrate de que el contenedor existe y que la API 'grecaptcha' está disponible
+  if (recaptchaContainer.value && window.grecaptcha) {
+    window.grecaptcha.ready(() => {
+      recaptchaWidgetId.value = window.grecaptcha.render(recaptchaContainer.value, {
+        'sitekey': '6LegfJ8rAAAAABWBru2sS_rlb5G7GHPie-V4ZD8-',
+        // Opcional: puedes añadir un callback para obtener el token
+        // 'callback': (token) => {
+        //   console.log('reCAPTCHA token:', token);
+        //   // Aquí guardarías el token para enviarlo con el formulario
+        // }
+      });
+    });
+  }
+};
+
+onMounted(() => {
+  // Si el script ya se cargó antes de que el componente se montara
+  if (window.grecaptcha && window.grecaptcha.render) {
+    renderRecaptcha();
+  } else {
+    // Si no, escucha el evento personalizado que creamos en index.html
+    window.addEventListener('recaptcha-loaded', renderRecaptcha);
+  }
+});
+
+// Es una buena práctica limpiar el listener cuando el componente se destruye
+onUnmounted(() => {
+  window.removeEventListener('recaptcha-loaded', renderRecaptcha);
+});
 
 // --- MODIFICACIÓN DEL onMounted ---
 onMounted(async () => {
@@ -238,7 +274,15 @@ async function procesarPedido() {
     if (!pago.value.referencia) return toast.error('Debes colocar el número de referencia.');
     if (!fechaTransaccion.value) return toast.error('Debes seleccionar la fecha de la transacción.');
   }
+
+  // Es recomendable verificar que el usuario completó el reCAPTCHA antes de enviar
+  const recaptchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId.value);
+  if (!recaptchaResponse) {
+    toast.error('Por favor, completa el reCAPTCHA.');
+    return;
+  }
   procesando.value = true
+
 
   const appliedCouponId = cartStore.appliedCoupon?.id
   const orderUserId = userStore.isLoggedIn ? userStore.user.id : null
@@ -479,21 +523,24 @@ async function procesarPedido() {
 
               <div v-if="totalInBolivares && !isLoadingRate">
                 <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Total en Bolívares (Aprox.)</span>
+                  <span class="font-bold">Total en Bolívares</span>
                   <span class="font-semibold text-lg">{{ totalInBolivares.toLocaleString('es-VE', {
                     minimumFractionDigits: 2, maximumFractionDigits: 2
                   }) }} Bs.</span>
                 </div>
-                <p class="text-right text-xs text-gray-400 mt-1">
+                <p class="text-right text-xs text-gray-600 mt-1">
                   Tasa de Referencia: {{ exchangeRate.toFixed(2) }} Bs. por USD
                 </p>
               </div>
             </div>
           </div>
+          <div class="flex justify-center flex-col text-center border-t mt-2">
+            <div class="mx-auto mt-4" ref="recaptchaContainer"></div>
+            <CustomButton @click="procesarPedido" :disabled="procesando" class="w-full mt-4">
+              {{ procesando ? 'Procesando...' : 'Finalizar Pedido' }}
+            </CustomButton>
+          </div>
 
-          <CustomButton @click="procesarPedido" :disabled="procesando" class="w-full mt-6">
-            {{ procesando ? 'Procesando...' : 'Finalizar Pedido' }}
-          </CustomButton>
 
         </div>
       </div>

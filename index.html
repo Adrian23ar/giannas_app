@@ -8,8 +8,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+  <script>
+    function onRecaptchaLoad() {
+      // Tu lógica actual está perfecta
+      window.dispatchEvent(new Event('recaptcha-loaded'));
+    }
+  </script>
+  <script src="https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit" async defer></script>
 
-  <title>Gianna's App</title>
+  <title>Gianna's Cookies</title>
 </head>
 
 <body>

@@ -99,7 +99,7 @@ const downloadReceipt = async (format) => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto py-12 px-4">
+  <div class="max-w-4xl mx-auto pb-4 px-2">
     <div v-if="isLoading" class="text-center py-20">
       <h2 class="text-2xl font-semibold text-gray-700">Cargando los detalles de tu pedido...</h2>
       <p class="text-gray-500 mt-2">Por favor, espera un momento.</p>
@@ -117,7 +117,7 @@ const downloadReceipt = async (format) => {
     <div v-else-if="orderDetails" class="text-center">
       <h1 class="text-4xl font-bold text-green-600">¡Gracias por tu pedido!</h1>
       <p class="text-gray-800 mt-4 text-lg">Hemos recibido tu orden y estamos procesando la verificación de tu pago.</p>
-      <p class="text-gray-600 mt-2">Puedes verificar el estado de tu pedido en la sección de <span
+      <p class="text-gray-600 mt-2">Puedes verificar el estado de tu pedido con tu numero de orden en la sección de <span
           class="font-semibold">"Seguimiento".</span></p>
 
       <div class="mt-10">

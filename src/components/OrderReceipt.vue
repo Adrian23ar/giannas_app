@@ -32,14 +32,14 @@ const subtotal = computed(() => {
 <template>
   <div id="receipt-content" class="bg-white p-8 max-w-2xl mx-auto border border-gray-200 rounded-lg">
 
-    <header class="flex justify-between items-start pb-6 border-b">
-      <div class="flex justify-center items-center gap-4">
-        <img src="/public/logo-giannas.png" alt="Logo de Gianna's App" class="h-16 object-contain mr-6">
+    <header class="flex flex-wrap justify-between items-start pb-6 border-b">
+      <div class="flex justify-center items-center gap-4 w-full md:w-auto mb-3">
+        <img src="/public/logo-giannas.png" alt="Logo de Gianna's App" class="h-10 sm:h-14 md:h-16 object-contain md:mr-6">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Recibo de Compra</h1>
+          <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">Recibo de Compra</h1>
         </div>
       </div>
-      <div class="text-right">
+      <div class="text-right w-full md:w-auto">
         <p class="text-sm text-gray-600">Pedido N°: <span class="font-semibold text-gray-800">#{{ details.id }}</span>
         </p>
         <p class="text-sm text-gray-600">Fecha: <span class="font-semibold text-gray-800">{{ formattedDate }}</span></p>
