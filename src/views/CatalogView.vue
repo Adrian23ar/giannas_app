@@ -38,7 +38,7 @@ const filters = ref({
   searchTerm: '',
   categoryId: null,
   minPrice: 0,
-  maxPrice: 500, // Puedes ajustar este valor máximo por defecto
+  maxPrice: 100, // Puedes ajustar este valor máximo por defecto
 })
 
 
@@ -94,10 +94,13 @@ watch(filters, (newFilters) => {
 
 
 // --- LÓGICA DEL MODAL Y CARRITO (sin cambios) ---
+// 1. Renombramos la variable de estado para que sea específica del catálogo general (la cuadrícula)
+const recentlyAddedInGridId = ref(null)
+// 2. Creamos una NUEVA variable de estado, solo para el slider
+const recentlyAddedInSliderId = ref(null)
 
 const selectedProduct = ref(null)
 const isModalVisible = ref(false)
-const recentlyAddedInCardId = ref(null)
 const recentlyAddedInModalId = ref(null)
 
 function handleShowDetails(producto) {
@@ -106,12 +109,24 @@ function handleShowDetails(producto) {
   isModalVisible.value = true
 }
 
-function handleAddToCartFromCard(producto) {
+// 3. Renombramos la función original para que maneje SOLO los clics del catálogo general
+function handleAddToCartFromGrid(producto) {
   cartStore.addToCart(producto, 1)
-  recentlyAddedInCardId.value = producto.id
+  recentlyAddedInGridId.value = producto.id // Actualiza el estado de la cuadrícula
   setTimeout(() => {
-    if (recentlyAddedInCardId.value === producto.id) {
-      recentlyAddedInCardId.value = null
+    if (recentlyAddedInGridId.value === producto.id) {
+      recentlyAddedInGridId.value = null
+    }
+  }, 2000)
+}
+
+// 4. Creamos una NUEVA función para manejar SOLO los clics del slider
+function handleAddToCartFromSlider(producto) {
+  cartStore.addToCart(producto, 1)
+  recentlyAddedInSliderId.value = producto.id // Actualiza el estado del slider
+  setTimeout(() => {
+    if (recentlyAddedInSliderId.value === producto.id) {
+      recentlyAddedInSliderId.value = null
     }
   }, 2000)
 }
@@ -162,7 +177,8 @@ onMounted(fetchInitialData)
 
       <div v-if="sections.length > 0" class="space-y-16 mb-16">
         <ProductSlider v-for="section in sections" :key="section.id" :section="section"
-          @show-details="handleShowDetails" @add-to-cart="handleAddToCartFromCard" />
+          @show-details="handleShowDetails" @add-to-cart="handleAddToCartFromSlider"
+          :recently-added-id="recentlyAddedInSliderId" />
       </div>
 
       <div>
@@ -196,8 +212,8 @@ onMounted(fetchInitialData)
           <div v-else>
             <div v-if="products.length > 0" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               <ProductCard v-for="producto in products" :key="producto.id" :producto="producto"
-                :is-recently-added="recentlyAddedInCardId === producto.id" @show-details="handleShowDetails(producto)"
-                @add-to-cart="handleAddToCartFromCard(producto)" />
+                :is-recently-added="recentlyAddedInGridId  === producto.id" @show-details="handleShowDetails(producto)"
+                @add-to-cart="handleAddToCartFromGrid(producto)" />
             </div>
 
             <div v-else class="text-center py-24 bg-gray-50 rounded-lg">

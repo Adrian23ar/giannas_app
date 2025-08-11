@@ -11,6 +11,10 @@ defineProps({
   section: {
     type: Object,
     required: true
+  },
+  recentlyAddedId: {
+    type: [String, Number],
+    default: null
   }
 });
 
@@ -36,7 +40,8 @@ function onAddToCart(product) {
       1024: { slidesPerView: 4.5 }
     }">
       <swiper-slide v-for="product in section.productos" :key="product.id">
-        <ProductCard :producto="product" @show-details="onShowDetails(product)" @add-to-cart="onAddToCart(product)" />
+        <ProductCard :producto="product" :is-recently-added="recentlyAddedId === product.id"
+          @show-details="onShowDetails(product)" @add-to-cart="onAddToCart(product)" />
       </swiper-slide>
     </swiper>
   </div>

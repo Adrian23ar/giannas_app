@@ -126,13 +126,13 @@ watch(route, () => {
     </aside>
 
     <div class="transition-all duration-300" :class="isSidebarOpen ? 'md:ml-64' : 'md:ml-20'">
-      <header class="h-20 fixed w-full flex z-10 items-center justify-between bg-white shadow-sm px-6">
+      <header class="h-20 sticky top-0 w-full flex z-10 items-center justify-between bg-white shadow-sm px-6">
         <button @click="isSidebarOpen = !isSidebarOpen">
           <Bars3Icon class="h-6 w-6 text-gray-700" />
         </button>
         <h1 class="text-xl md:text-2xl font-bold text-gray-800">{{$route.name.split('-').map(w =>
           w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}}</h1>
-        <AdminNotificationBell />
+        <AdminNotificationBell/>
 
       </header>
       <main class="pt-28 p-6 max-w-8xl mx-auto">

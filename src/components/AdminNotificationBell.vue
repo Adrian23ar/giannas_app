@@ -1,49 +1,73 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { supabase } from '@/supabase'
+import * as notificationService from '@/services/notificationService' // <-- 2. Importar el nuevo servicio
 import { BellIcon } from '@heroicons/vue/24/outline'
-import { formatDistanceToNow } from 'date-fns';
-import es from 'date-fns/locale/es';
+import { formatDistanceToNow } from 'date-fns'
+import es from 'date-fns/locale/es'
 
 const notificaciones = ref([])
 const hayNuevas = ref(false)
 const panelAbierto = ref(false)
 
-// Función para manejar la llegada de un nuevo pedido
-const handleNuevoPedido = (payload) => {
-  console.log('Nuevo pedido recibido:', payload.new);
-  const nuevaNotificacion = {
-    id: payload.new.id,
-    mensaje: `Nuevo pedido de ${payload.new.nombre_cliente}`,
-    fecha: payload.new.created_at,
-    leida: false
-  };
-  // unshift() lo añade al principio de la lista
-  notificaciones.value.unshift(nuevaNotificacion);
-  hayNuevas.value = true;
-};
+// --- 3. NUEVA FUNCIÓN PARA CARGAR NOTIFICACIONES INICIALES ---
+async function fetchInitialNotifications() {
+  try {
+    const unreadNotifications = await notificationService.getUnreadNotifications()
+    notificaciones.value = unreadNotifications
+    if (unreadNotifications.length > 0) {
+      hayNuevas.value = true
+    }
+  } catch (error) {
+    console.error('No se pudieron cargar las notificaciones iniciales.')
+  }
+}
 
-let subscription = null;
+// --- 4. FUNCIÓN EN TIEMPO REAL ACTUALIZADA ---
+const handleNuevaNotificacion = (payload) => {
+  // La notificación viene directamente desde la tabla 'notificaciones'
+  const nuevaNotificacion = payload.new
+  notificaciones.value.unshift(nuevaNotificacion)
+  hayNuevas.value = true
+}
+
+let subscription = null
 
 onMounted(() => {
-  // Nos suscribimos al canal de 'pedidos'
-  subscription = supabase.channel('pedidos')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pedidos' }, handleNuevoPedido)
-    .subscribe();
-});
+  // Primero, cargamos las notificaciones que estaban pendientes
+  fetchInitialNotifications()
 
-// Es importante desuscribirse al destruir el componente para evitar fugas de memoria
+  // --- 5. SUSCRIPCIÓN ACTUALIZADA A LA TABLA 'notificaciones' ---
+  subscription = supabase
+    .channel('notificaciones') // Escuchamos el nuevo canal
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notificaciones' },
+      handleNuevaNotificacion
+    )
+    .subscribe()
+})
+
 onUnmounted(() => {
   if (subscription) {
-    supabase.removeChannel(subscription);
+    supabase.removeChannel(subscription)
   }
-});
+})
 
-function abrirPanel() {
-  panelAbierto.value = !panelAbierto.value;
-  if (panelAbierto.value) {
-    hayNuevas.value = false; // Marcamos como leídas al abrir
-    notificaciones.value.forEach(n => n.leida = true);
+// --- 6. FUNCIÓN PARA ABRIR EL PANEL ACTUALIZADA ---
+async function abrirPanel() {
+  panelAbierto.value = !panelAbierto.value
+  // Si abrimos el panel y había nuevas notificaciones...
+  if (panelAbierto.value && hayNuevas.value) {
+    hayNuevas.value = false // Quitamos el punto rojo inmediatamente (UI optimista)
+    try {
+      // Llamamos al servicio para marcar todas como leídas en la base de datos
+      await notificationService.markNotificationsAsRead()
+    } catch (error) {
+      // Si falla, volvemos a mostrar el punto rojo para que el usuario sepa
+      hayNuevas.value = true
+      console.error('No se pudieron marcar las notificaciones como leídas.')
+    }
   }
 }
 </script>
@@ -63,7 +87,8 @@ function abrirPanel() {
           <li v-for="notif in notificaciones" :key="notif.id" class="p-3 border-b hover:bg-slate-50">
             <p class="font-semibold">{{ notif.mensaje }}</p>
             <p class="text-xs text-gray-500">
-              hace {{ formatDistanceToNow(new Date(notif.fecha), { locale: es }) }}
+              hace
+              {{ formatDistanceToNow(new Date(notif.created_at), { locale: es }) }}
             </p>
           </li>
         </ul>

@@ -26,7 +26,7 @@ onMounted(() => {
     form.value.cliente_id = userStore.user.id
     form.value.nombre_completo = userStore.user.user_metadata?.full_name || ''
     form.value.email = userStore.user.email
-    form.value.telefono = userStore.user.phone || ''
+    form.value.telefono = userStore.user.user_metadata?.phone || ''
   }
 })
 
@@ -82,7 +82,25 @@ async function handleSubmit() {
 
   loading.value = true
   try {
-    const newOrder = await createSpecialOrder(form.value)
+    // --- INICIO DE LA CORRECCIÓN ---
+
+    // 1. Creamos una copia de los datos del formulario para poder modificarla.
+    const dataToSend = { ...form.value };
+
+    // 2. Si la fecha está vacía, la convertimos a null.
+    if (!dataToSend.fecha_evento) {
+      dataToSend.fecha_evento = null;
+    }
+
+    // Opcional pero recomendado: Hacemos lo mismo para el número de personas.
+    if (!dataToSend.cantidad_personas) {
+      dataToSend.cantidad_personas = null;
+    }
+
+    // 3. Enviamos los datos ya corregidos al servicio.
+    const newOrder = await createSpecialOrder(dataToSend);
+
+    // --- FIN DE LA CORRECCIÓN ---
     router.push({
       name: 'special-order-confirmation',
       query: {

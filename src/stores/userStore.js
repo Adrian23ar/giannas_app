@@ -1,3 +1,4 @@
+// src/stores/userStore.js
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '@/supabase'
