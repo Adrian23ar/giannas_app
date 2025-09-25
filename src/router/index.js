@@ -15,12 +15,11 @@ const router = createRouter({
       path: '/',
       component: ClientLayout,
       children: [
-        // ✅ AQUÍ ESTÁ LA MAGIA: CADA VISTA SE CARGA BAJO DEMANDA
+        // AQUÍ ESTÁ LA MAGIA: CADA VISTA SE CARGA BAJO DEMANDA
         { path: '', name: 'catalog', component: () => import('../views/CatalogView.vue') },
         { path: 'cart', name: 'cart', component: () => import('../views/CartView.vue') },
         { path: 'checkout', name: 'checkout', component: () => import('../views/CheckoutView.vue') },
         { path: 'confirmation/:orderId', name: 'confirmation', component: () => import('../views/OrderConfirmationView.vue') },
-        // La vista de seguimiento (con el mapa pesado) solo se cargará al visitar /seguimiento
         { path: 'seguimiento', name: 'tracking', component: () => import('../views/TrackingView.vue') },
         { path: 'ingresar', name: 'client-login', component: () => import('../views/ClientLoginView.vue') },
         { path: 'registro', name: 'client-register', component: () => import('../views/ClientRegisterView.vue') },
@@ -57,7 +56,6 @@ const router = createRouter({
   ],
 })
 
-// Tu lógica de router.beforeEach se mantiene exactamente igual...
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 
@@ -74,7 +72,7 @@ router.beforeEach(async (to, from, next) => {
       return next('/admin') // Si es admin, lo llevamos a su dashboard
     }
     if (isLoggedIn && !isAdmin) {
-      return next('/') // ✨ CORRECCIÓN: Si es cliente, lo llevamos al catálogo
+      return next('/') // Si es cliente, lo llevamos al catálogo
     }
   }
 
