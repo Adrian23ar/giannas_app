@@ -3,13 +3,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
+// Función para formatear una fecha a YYYY-MM-DD
 const toYYYYMMDD = (date: Date) => date.toISOString().split('T')[0]
-const toDDMMYYYY = (date: Date) => {
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const year = date.getFullYear()
-  return `${day}-${month}-${year}`
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -17,58 +12,59 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // --- INICIO DEL CAMBIO ---
-    // Leemos la fecha que nos envía el cliente desde el cuerpo de la solicitud.
     const { date: clientDate } = await req.json()
     if (!clientDate || !/^\d{4}-\d{2}-\d{2}$/.test(clientDate)) {
       throw new Error('Fecha inválida o no proporcionada.')
     }
-    const todayYYYYMMDD = clientDate // "Hoy" es la fecha que el cliente nos dice.
-    // --- FIN DEL CAMBIO ---
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    const API_TOKEN = Deno.env.get('PYDOLARVE_TOKEN')
-    if (!API_TOKEN) throw new Error('El secreto PYDOLARVE_TOKEN no está configurado.')
+    // 1. Usamos la nueva URL de la API
+    const apiUrl = 'https://api.dolarvzla.com/public/exchange-rate/list'
 
-    const maxRetries = 7
-    for (let i = 0; i < maxRetries; i++) {
-      // La lógica de reintentos ahora se basa en la fecha del cliente.
-      const dateToTry = new Date(todayYYYYMMDD + 'T12:00:00Z') // Usamos mediodía para evitar errores de zona horaria
-      dateToTry.setDate(dateToTry.getDate() - i)
-
-      const dateToTryYYYYMMDD = toYYYYMMDD(dateToTry)
-      const dateToTryDDMMYYYY = toDDMMYYYY(dateToTry)
-
-      const apiUrl = `https://pydolarve.org/api/v2/dollar/history?page=bcv&monitor=usd&start_date=${dateToTryDDMMYYYY}&end_date=${dateToTryDDMMYYYY}&format_date=default&rounded_price=true&order=desc`
-
-      const response = await fetch(apiUrl, { headers: { Authorization: `Bearer ${API_TOKEN}` } })
-      if (!response.ok) continue
-
-      const data = await response.json()
-      if (data?.history?.length > 0) {
-        const rateValue = parseFloat(data.history[0].price)
-        if (rateValue > 0) {
-          // La lógica de guardado sigue igual, pero ahora usa la fecha correcta.
-          await supabaseClient
-            .from('tasa_cambio')
-            .upsert({ fecha: dateToTryYYYYMMDD, tasa: rateValue })
-          if (todayYYYYMMDD !== dateToTryYYYYMMDD) {
-            await supabaseClient
-              .from('tasa_cambio')
-              .upsert({ fecha: todayYYYYMMDD, tasa: rateValue })
-          }
-          return new Response(JSON.stringify({ rate: rateValue }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
-          })
-        }
-      }
+    // 2. Hacemos la llamada a la API (ya no necesita token)
+    const response = await fetch(apiUrl)
+    if (!response.ok) {
+      throw new Error('La API de DolarVzla no respondió correctamente.')
     }
-    throw new Error(`No se pudo obtener la tasa después de ${maxRetries} intentos.`)
+
+    const data = await response.json()
+
+    // La estructura ahora es un objeto con una propiedad 'rates'
+    if (!data || !Array.isArray(data.rates) || data.rates.length === 0) {
+      throw new Error('La respuesta de la API no tiene el formato esperado o está vacía.')
+    }
+
+    // 3. Buscamos la tasa del día o la más reciente
+    let foundRate = null
+    // Primero, buscamos la tasa exacta para la fecha del cliente
+    const exactMatch = data.rates.find((r) => r.date === clientDate)
+    if (exactMatch && exactMatch.usd) {
+      foundRate = exactMatch
+    } else {
+      // Si no hay tasa para hoy (fin de semana/feriado), usamos la más reciente disponible
+      foundRate = data.rates[0]
+    }
+
+    if (!foundRate || !foundRate.usd) {
+      throw new Error('No se encontró una tasa de cambio válida en la respuesta de la API.')
+    }
+
+    const rateValue = parseFloat(foundRate.usd)
+
+    // 4. Guardamos la tasa en nuestra base de datos para usarla como caché
+    await supabaseClient
+      .from('tasa_cambio')
+      .upsert({ fecha: clientDate, tasa: rateValue }, { onConflict: 'fecha' })
+
+    // 5. Devolvemos la tasa encontrada al frontend
+    return new Response(JSON.stringify({ rate: rateValue }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    })
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

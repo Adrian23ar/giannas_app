@@ -49,6 +49,7 @@ const router = createRouter({
         { path: 'pedidos', name: 'Pedidos', component: () => import('../views/AdminPedidosView.vue') },
         { path: 'cupones', name: 'Cupones', component: () => import('../views/AdminCuponesView.vue') },
         { path: 'metodos-pago', name: 'Metodos de Pago', component: () => import('../views/AdminPaymentsView.vue') },
+        { path: 'tasa-de-cambio', name: 'Tasa de Cambio', component: () => import('../views/AdminExchangeRateView.vue') },
         { path: 'secciones', name: 'Secciones', component: () => import('@/views/AdminSectionsView.vue') },
         { path: 'pedidos-especiales', name: 'Pedidos Especiales', component: () => import('@/views/AdminSpecialOrdersView.vue') }
       ],

@@ -13,7 +13,8 @@ import {
   ShoppingCartIcon,
   TicketIcon,
   CreditCardIcon,
-  Square3Stack3DIcon
+  Square3Stack3DIcon,
+  BanknotesIcon
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -95,6 +96,14 @@ watch(route, () => {
             </RouterLink>
           </li>
           <li>
+            <RouterLink to="/admin/tasa-de-cambio"
+              class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
+              :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/tasa-de-cambio' }]">
+              <BanknotesIcon class="h-6 w-6 flex-shrink-0" />
+              <span v-if="isSidebarOpen">Tasa de Cambio</span>
+            </RouterLink>
+          </li>
+          <li>
             <RouterLink to="/admin/secciones" class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
               :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/secciones' }]">
               <Square3Stack3DIcon class="h-6 w-6 flex-shrink-0" />
@@ -103,7 +112,8 @@ watch(route, () => {
           </li>
           <li>
             <RouterLink to="/admin/pedidos-especiales"
-              class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors" :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/pedidos-especiales' }]">
+              class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
+              :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/pedidos-especiales' }]">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                 stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -132,10 +142,10 @@ watch(route, () => {
         </button>
         <h1 class="text-xl md:text-2xl font-bold text-gray-800">{{$route.name.split('-').map(w =>
           w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}}</h1>
-        <AdminNotificationBell/>
+        <AdminNotificationBell />
 
       </header>
-      <main class="pt-28 p-6 max-w-8xl mx-auto">
+      <main class="pt-12 p-6 max-w-8xl mx-auto">
         <RouterView v-slot="{ Component }">
           <Transition name="fade" mode="out-in">
             <component :is="Component" />
