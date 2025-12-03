@@ -154,9 +154,9 @@ onMounted(fetchInitialData)
 </script>
 
 <template>
-  <div class="pb-8 px-4 sm:px-6 lg:px-8">
+  <div class="pb-4 px-4 sm:px-6 lg:px-8">
 
-    <section class="mb-16">
+    <section class="mb-12">
       <picture>
         <source media="(max-width: 680px)" srcset="/welcome.webp">
 
@@ -182,20 +182,6 @@ onMounted(fetchInitialData)
       </div>
 
       <div>
-        <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-14 bg-brand-morado rounded-lg p-4 lg:p-8">
-          <h2 class="text-2xl sm:text-3xl font-bold col-span-2 md:col-span-4 text-center text-white">Comprar es muy
-            fácil</h2>
-
-          <img :src="comprar_2" alt="Pasos para comprar en Gianna's Cookies"
-            class="w-full h-32 lg:h-52 rounded object-contain" />
-          <img :src="comprar_3" alt="Pasos para comprar en Gianna's Cookies"
-            class="w-full h-32 lg:h-52 rounded object-contain" />
-          <img :src="comprar_4" alt="Pasos para comprar en Gianna's Cookies"
-            class="w-full h-32 lg:h-52 rounded object-contain" />
-          <img :src="comprar_5" alt="Pasos para comprar en Gianna's Cookies"
-            class="w-full h-32 lg:h-52 rounded object-contain" />
-        </section>
-
         <div class="text-center md:text-left">
           <h1 class="text-3xl sm:text-4xl font-bold text-brand-morado mb-2">Nuestro Dulce Catálogo</h1>
           <p class="text-gray-600 mb-8">Encuentra tus galletas, brownies y postres favoritos.</p>
@@ -210,16 +196,23 @@ onMounted(fetchInitialData)
           </div>
 
           <div v-else>
-            <div v-if="products.length > 0" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            <div v-if="products.length > 0" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 justify-items-center">
               <ProductCard v-for="producto in products" :key="producto.id" :producto="producto"
-                :is-recently-added="recentlyAddedInGridId  === producto.id" @show-details="handleShowDetails(producto)"
+                :is-recently-added="recentlyAddedInGridId === producto.id" @show-details="handleShowDetails(producto)"
                 @add-to-cart="handleAddToCartFromGrid(producto)" />
             </div>
+
 
             <div v-else class="text-center py-24 bg-gray-50 rounded-lg">
               <p class="font-bold text-2xl text-gray-700">No se encontraron productos</p>
               <p class="text-gray-500 mt-2">Intenta cambiar los filtros o limpiar la búsqueda.</p>
             </div>
+            <p class="text-center mt-8 text-sm sm:text-base">¿Tienes alguna pregunta sobre el menú? <br>
+              <a href="https://wa.me/+584122741450" class="text-brand-fucsia font-bold hover:underline">
+                Comunícate por WhatsApp con Gianna’s Cookies</a>
+            </p>
+
+
           </div>
         </div>
       </div>

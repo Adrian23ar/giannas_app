@@ -1,6 +1,5 @@
 <script setup>
 import { ref, watch } from 'vue'
-import PriceRangeSlider from './PriceRangeSlider.vue'
 import { MagnifyingGlassIcon, XCircleIcon } from '@heroicons/vue/24/outline'
 
 // Recibimos las categorías desde el padre
@@ -27,15 +26,9 @@ watch([searchTerm, selectedCategoryId, priceRange], () => {
   })
 }, { deep: true })
 
-// Función para limpiar todos los filtros
-function clearFilters() {
-  searchTerm.value = ''
-  selectedCategoryId.value = null
-  priceRange.value = [0, 500] // O los valores por defecto que prefieras
-}
 </script>
 <template>
-  <div class="bg-white p-4 rounded-lg shadow-md mb-8 space-y-4">
+  <div class="bg-white p-4 rounded-lg shadow-md mb-8 space-y-4 py-6">
     <div class="relative">
       <MagnifyingGlassIcon class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
       <input type="text" v-model="searchTerm" placeholder="Buscar por nombre..."
@@ -56,17 +49,6 @@ function clearFilters() {
           {{ category.nombre }}
         </button>
       </div>
-    </div>
-
-    <div>
-      <h3 class="font-semibold mb-2 text-sm text-gray-600">Precio ($)</h3>
-      <PriceRangeSlider v-model="priceRange" :min="0" :max="500" />
-    </div>
-
-    <div class="text-right">
-      <button @click="clearFilters" class="text-sm font-semibold text-brand-morado hover:underline">
-        <XCircleIcon class="w-5 h-5 inline-block mr-1" />Limpiar Filtros
-      </button>
     </div>
   </div>
 </template>

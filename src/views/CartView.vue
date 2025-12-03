@@ -7,7 +7,7 @@ import EmptyState from '@/components/EmptyState.vue'
 const cartStore = useCartStore()
 
 function orderViaWhatsApp() {
-  const phoneNumber = '+584246574752';
+  const phoneNumber = '+584122741450';
 
   // Construimos la lista de productos
   const productList = cartStore.items.map(item => {
@@ -22,7 +22,6 @@ function orderViaWhatsApp() {
 
   // Creamos la URL final
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-  https://wa.me/+58%20424-6574752?text=%C2%A1Hola%20Gianna%27s%20Cookies!%20%F0%9F%8D%AA%0A%0AQuisiera%20hacer%20el%20siguiente%20pedido%3A%0A%0A-%201%20x%20Galleta%0A%0A*Total%3A%20%2410.00*%0A%0A%C2%A1Gracias!
   // Abrimos la URL en una nueva pestaña
   window.open(whatsappUrl, '_blank');
 }
