@@ -369,7 +369,7 @@ async function procesarPedido() {
             </label>
             <label class="flex items-center gap-2 p-3 border rounded-md cursor-pointer">
               <input type="radio" v-model="metodoEntrega" value="envio" name="entrega" class="accent-brand-fucsia">
-              Envío a domicilio
+              Delivery
             </label>
           </div>
           <div v-if="metodoEntrega === 'envio'" class="mt-4 space-y-4">
@@ -429,8 +429,10 @@ async function procesarPedido() {
                 selectedPaymentMethod.detalles.extra }}</div>
             </div>
           </div>
-          <div class="text-center text-sm text-gray-500 my-4 p-3 bg-blue-50 rounded-lg">
-            <p>Para pagos con <strong>Zelle</strong>, por favor contáctanos vía WhatsApp para coordinar.</p>
+          <div class="text-center text-sm text-gray-600 my-4 p-3 bg-blue-50 rounded-lg">
+            <p>Para pagos con <strong>Zelle</strong>, por favor contáctanos vía <a href="https://wa.me/+584122741450"
+                class="text-brand-fucsia font-bold hover:underline">
+                WhatsApp</a> para coordinar.</p>
           </div>
           <label class="block mb-2">
             <span class="text-gray-700 font-medium text-sm">Monto en Dólares (USD)</span>
