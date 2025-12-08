@@ -14,7 +14,7 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
 
 <template>
   <div class="font-sans bg-brand-blanco">
-    <header class="shadow-md fixed bg-brand-fucsia w-full top-0 z-[9999]">
+    <header class="shadow-md fixed bg-brand-fucsia w-full top-0 z-40">
       <nav class="container mx-auto px-8 xl:px-8 py-4 flex justify-between items-center">
         <RouterLink to="/">
           <img src="/logo-giannas.png" alt="Logo Gianna's Cookies" class="h-12">

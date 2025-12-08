@@ -35,7 +35,7 @@ const variantClasses = computed(() => {
 
 <template>
   <button :type="type" :disabled="disabled"
-    class="inline-flex items-center justify-center gap-2 font-bold py-2 px-6 rounded-md transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+    class="inline-flex items-center justify-center gap-2 font-bold py-2 px-6 rounded-md transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
     :class="variantClasses">
     <slot></slot>
   </button>
