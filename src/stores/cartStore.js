@@ -6,7 +6,6 @@ import { validateCoupon } from '@/services/couponService'
 import { fetchCart, upsertCartItem, removeCartItem, clearUserCart } from '@/services/cartService'
 
 export const useCartStore = defineStore('cart', () => {
-  // --- ESTADO ---
   const userStore = useUserStore()
   const items = ref([])
   const recentlyAddedId = ref(null)
@@ -15,7 +14,6 @@ export const useCartStore = defineStore('cart', () => {
 
   // --- GETTERS ---
   const totalItems = computed(() => {
-    // Ahora cuenta la cantidad total de productos, no solo de líneas de item
     return items.value.reduce((total, item) => total + item.quantity, 0)
   })
 
@@ -30,6 +28,11 @@ export const useCartStore = defineStore('cart', () => {
     return total < 0 ? 0 : total
   })
 
+  // Helper para comparar variantes (simple comparación de objetos)
+  const areVariantsEqual = (v1, v2) => {
+    return JSON.stringify(v1 || {}) === JSON.stringify(v2 || {})
+  }
+
   // --- ACTIONS ---
 
   async function initializeCart() {
@@ -41,51 +44,59 @@ export const useCartStore = defineStore('cart', () => {
     }
   }
 
-  // ---------- INICIO DEL CAMBIO ----------
-  // Modificamos addToCart para que acepte una cantidad. Por defecto es 1.
-  async function addToCart(product, quantity = 1) {
-    const existingProduct = items.value.find(item => item.id === product.id)
-    if (existingProduct) {
-      // Si el producto ya existe, sumamos la nueva cantidad
-      existingProduct.quantity += quantity
+  // MODIFICADO: Ahora acepta 'variants' y compara profundamente
+  async function addToCart(product, quantity = 1, variants = {}) {
+    // Buscamos si ya existe el producto CON LAS MISMAS variantes
+    const existingItem = items.value.find(item =>
+      item.id === product.id && areVariantsEqual(item.variants, variants)
+    )
+
+    if (existingItem) {
+      existingItem.quantity += quantity
     } else {
-      // Si es nuevo, lo añadimos con la cantidad especificada
-      items.value.push({ ...product, quantity })
+      // Si no existe esa combinación, creamos nueva línea
+      items.value.push({
+        ...product,
+        quantity,
+        variants
+      })
     }
 
     if (userStore.isLoggedIn) {
-      const item = items.value.find(i => i.id === product.id)
-      await upsertCartItem(userStore.user.id, item.id, item.quantity)
+      // Obtenemos el item actualizado (o nuevo) para sincronizar
+      const itemToSync = items.value.find(i => i.id === product.id && areVariantsEqual(i.variants, variants))
+      await upsertCartItem(userStore.user.id, product.id, itemToSync.quantity, variants)
     }
 
-    // El feedback visual sigue funcionando igual
+    // Feedback visual
     recentlyAddedId.value = product.id
     setTimeout(() => {
       recentlyAddedId.value = null
     }, 1000)
   }
-  // ---------- FIN DEL CAMBIO ----------
 
-  async function removeFromCart(productId) {
-    const index = items.value.findIndex(item => item.id === productId)
-    if (index !== -1) {
-      items.value.splice(index, 1)
-      if (userStore.isLoggedIn) {
-        await removeCartItem(userStore.user.id, productId)
-      }
+  async function removeFromCart(cartItemIndex) {
+    // Usamos el índice del array porque el ID del producto ya no es único en la lista
+    const itemToRemove = items.value[cartItemIndex]
+    if (!itemToRemove) return
+
+    items.value.splice(cartItemIndex, 1)
+
+    if (userStore.isLoggedIn) {
+      await removeCartItem(userStore.user.id, itemToRemove.id, itemToRemove.variants)
     }
   }
 
-  async function updateQuantity(productId, newQuantity) {
-    const product = items.value.find(item => item.id === productId)
-    if (!product) return
+  async function updateQuantity(cartItemIndex, newQuantity) {
+    const item = items.value[cartItemIndex]
+    if (!item) return
 
     if (newQuantity < 1) {
-      removeFromCart(productId)
+      removeFromCart(cartItemIndex)
     } else {
-      product.quantity = newQuantity
+      item.quantity = newQuantity
       if (userStore.isLoggedIn) {
-        await upsertCartItem(userStore.user.id, productId, newQuantity)
+        await upsertCartItem(userStore.user.id, item.id, newQuantity, item.variants)
       }
     }
   }
@@ -100,7 +111,6 @@ export const useCartStore = defineStore('cart', () => {
 
   function recalculateDiscount() {
     if (!appliedCoupon.value) return;
-
     let discount = 0;
     if (appliedCoupon.value.tipo === 'porcentaje') {
       discount = subtotal.value * (appliedCoupon.value.valor / 100);
@@ -130,11 +140,7 @@ export const useCartStore = defineStore('cart', () => {
   }, { deep: true });
 
   watch(() => userStore.isLoggedIn, (isLoggedIn) => {
-    if (isLoggedIn) {
-      initializeCart()
-    } else {
-      initializeCart()
-    }
+    initializeCart()
   });
 
   return {

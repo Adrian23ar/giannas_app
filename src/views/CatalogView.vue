@@ -14,12 +14,6 @@ import ProductDetailModal from '@/components/ProductDetailModal.vue'
 import ProductSlider from '@/components/ProductSlider.vue'
 import ProductFilters from '@/components/ProductFilters.vue'
 
-// Importamos todos los assets que usaremos en la vista
-import comprar_2 from '@/assets/2.png'
-import comprar_3 from '@/assets/3.png'
-import comprar_4 from '@/assets/4.png'
-import comprar_5 from '@/assets/5.png'
-
 // --- ESTADO PRINCIPAL DE LA VISTA ---
 const cartStore = useCartStore()
 
@@ -131,8 +125,11 @@ function handleAddToCartFromSlider(producto) {
   }, 2000)
 }
 
-function handleAddToCartFromModal({ product, quantity }) {
-  cartStore.addToCart(product, quantity)
+// Busca esta función y reemplázala completamente
+function handleAddToCartFromModal({ product, quantity, variants }) { // <-- Agregamos 'variants' aquí
+  // Pasamos 'variants' al store
+  cartStore.addToCart(product, quantity, variants)
+
   recentlyAddedInModalId.value = product.id
   setTimeout(() => {
     if (recentlyAddedInModalId.value === product.id) {

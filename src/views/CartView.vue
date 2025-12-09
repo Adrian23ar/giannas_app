@@ -6,23 +6,32 @@ import EmptyState from '@/components/EmptyState.vue'
 
 const cartStore = useCartStore()
 
+function getVariantSummary(item) {
+  // Verificamos si hay variantes y configuración
+  if (!item.variants || Object.keys(item.variants).length === 0) return [];
+  if (!item.configuracion_variantes) return []; // Si no hay config, no podemos saber los títulos
+
+  // Mapeamos los índices guardados a sus títulos reales
+  return Object.entries(item.variants).map(([groupIndex, options]) => {
+    // Unimos las opciones con comas (ej: "Chocolate, Maní")
+    return ` ${options.join(', ')}`;
+  }).filter(text => text !== null); // Limpieza final
+}
+
 function orderViaWhatsApp() {
   const phoneNumber = '+584122741450';
 
-  // Construimos la lista de productos
   const productList = cartStore.items.map(item => {
-    return `- ${item.quantity} x ${item.nombre}`;
-  }).join('\n'); // El '\n' crea un salto de línea
+    let text = `- ${item.quantity} x ${item.nombre}`;
+    const variants = getVariantSummary(item);
+    if (variants && variants.length > 0) {
+      text += `\n  _(${variants.join(' | ')})_`; // Formato itálica para variantes
+    }
+    return text;
+  }).join('\n');
 
-  // Creamos el mensaje completo
   const message = `¡Hola Gianna's Cookies!\n\nQuisiera hacer el siguiente pedido:\n\n${productList}\n\n*Total: $${cartStore.subtotal.toFixed(2)}*\n\n¡Gracias!`;
-
-  // Codificamos el mensaje para que sea seguro en una URL
-  const encodedMessage = encodeURIComponent(message);
-
-  // Creamos la URL final
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-  // Abrimos la URL en una nueva pestaña
+  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
   window.open(whatsappUrl, '_blank');
 }
 </script>
@@ -44,30 +53,40 @@ function orderViaWhatsApp() {
 
     <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="lg:col-span-2 space-y-4">
-        <div v-for="item in cartStore.items" :key="item.id"
-          class="flex flex-wrap items-center gap-x-4 gap-y-3 bg-white p-4 rounded-lg shadow-md">
+        <div v-for="(item, index) in cartStore.items" :key="`${item.id}-${index}`"
+          class="flex flex-wrap items-start gap-x-4 gap-y-3 bg-white p-4 rounded-lg shadow-md">
 
-          <img :src="item.foto_url" :alt="item.nombre" class="w-24 h-24 rounded-md object-cover">
+          <img :src="item.foto_url" :alt="item.nombre" class="w-24 h-24 rounded-md object-cover bg-gray-100">
 
           <div class="flex-grow min-w-[150px]">
-            <h3 class="font-bold text-lg">{{ item.nombre }}</h3>
-            <p class="text-gray-600">${{ item.precio.toFixed(2) }}</p>
-          </div>
+            <h3 class="font-bold text-lg text-brand-morado">{{ item.nombre }}</h3>
 
-          <div class="w-full sm:w-auto flex items-center justify-end gap-4">
-
-            <div class="flex items-center gap-2 border rounded-md">
-              <button @click="cartStore.updateQuantity(item.id, item.quantity - 1)"
-                class="px-3 py-1 font-bold text-brand-morado">-</button>
-              <span class="font-semibold">{{ item.quantity }}</span>
-              <button @click="cartStore.updateQuantity(item.id, item.quantity + 1)"
-                class="px-3 py-1 font-bold text-brand-morado">+</button>
+            <div v-if="item.variants && Object.keys(item.variants).length > 0" class="space-y-0.5">
+              <p v-for="(line, idx) in getVariantSummary(item)" :key="idx" class="text-xs text-gray-500 font-medium">
+                {{ line }}
+              </p>
             </div>
 
-            <p class="font-bold w-20 text-right text-lg">${{ (item.precio * item.quantity).toFixed(2) }}</p>
+            <p class="text-gray-800 font-bold mt-2">${{ item.precio.toFixed(2) }}</p>
+          </div>
 
-            <button @click="cartStore.removeFromCart(item.id)" class="text-gray-500 hover:text-red-600">
-              <TrashIcon class="h-6 w-6" />
+          <div class="w-full sm:w-auto flex items-center justify-end gap-4 self-center sm:self-start mt-2 sm:mt-0">
+
+            <div class="flex items-center gap-2 border rounded-md bg-gray-50">
+              <button @click="cartStore.updateQuantity(index, item.quantity - 1)"
+                class="w-8 h-8 flex items-center justify-center font-bold text-brand-morado hover:bg-gray-200 transition">-</button>
+              <span class="font-semibold w-6 text-center">{{ item.quantity }}</span>
+              <button @click="cartStore.updateQuantity(index, item.quantity + 1)"
+                class="w-8 h-8 flex items-center justify-center font-bold text-brand-morado hover:bg-gray-200 transition">+</button>
+            </div>
+
+            <p class="font-bold w-20 text-right text-lg text-brand-fucsia">${{ (item.precio * item.quantity).toFixed(2)
+              }}
+            </p>
+
+            <button @click="cartStore.removeFromCart(index)"
+              class="text-gray-400 hover:text-red-500 transition-colors p-1">
+              <TrashIcon class="h-5 w-5" />
             </button>
 
           </div>
@@ -77,31 +96,43 @@ function orderViaWhatsApp() {
 
       <div class="lg:col-span-1">
         <div class="bg-white p-6 rounded-lg shadow-md sticky top-28">
-          <h2 class="text-2xl font-bold border-b pb-4">Resumen del Pedido</h2>
+          <h2 class="text-2xl font-bold border-b pb-4 text-gray-800">Resumen del Pedido</h2>
           <div class="flex justify-between items-center mt-4">
             <p class="text-gray-600">Subtotal</p>
             <p class="font-bold text-lg">${{ cartStore.subtotal.toFixed(2) }}</p>
           </div>
-          <p class="text-xs text-gray-500 mt-2">Costos de envío consultar al Whatsapp.</p>
+
+          <div v-if="cartStore.appliedCoupon" class="flex justify-between items-center mt-2 text-green-600 text-sm">
+            <p>Cupón ({{ cartStore.appliedCoupon.codigo }})</p>
+            <p>-${{ cartStore.discountAmount.toFixed(2) }}</p>
+          </div>
+
+          <div class="flex justify-between items-center mt-4 pt-4 border-t border-dashed">
+            <p class="text-gray-800 font-bold text-xl">Total</p>
+            <p class="font-bold text-xl text-brand-fucsia">${{ cartStore.finalTotal.toFixed(2) }}</p>
+          </div>
+
+          <p class="text-xs text-gray-500 mt-4 text-center">Costos de envío consultar al Whatsapp.</p>
+
           <RouterLink to="/checkout"
-            class="block text-center w-full mt-6 bg-brand-fucsia text-white font-bold py-3 rounded-md hover:bg-opacity-90">
+            class="block text-center w-full mt-4 bg-brand-fucsia text-white font-bold py-3 rounded-md hover:bg-opacity-90 shadow-lg shadow-brand-fucsia/20 transition-all">
             Proceder al Pago
           </RouterLink>
 
           <div class="flex items-center gap-2 mt-4">
             <div class="flex-grow border-t"></div>
-            <span class="text-xs text-gray-500">O</span>
+            <span class="text-xs text-gray-500 uppercase">O pedir por</span>
             <div class="flex-grow border-t"></div>
           </div>
 
           <button @click="orderViaWhatsApp"
-            class="flex items-center justify-center gap-2 w-full mt-4 bg-green-500 text-white font-bold py-3 rounded-md hover:bg-green-600 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-6 h-6" viewBox="0 0 50 50">
+            class="flex items-center justify-center gap-2 w-full mt-4 bg-green-500 text-white font-bold py-3 rounded-md hover:bg-green-600 transition-colors shadow-lg shadow-green-500/20">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-5 h-5" viewBox="0 0 50 50">
               <path
                 d="M25,2C12.318,2,2,12.318,2,25c0,3.96,1.023,7.854,2.963,11.29L2.037,46.73c-0.096,0.343-0.003,0.711,0.245,0.966 C2.473,47.893,2.733,48,3,48c0.08,0,0.161-0.01,0.24-0.029l10.896-2.699C17.463,47.058,21.21,48,25,48c12.682,0,23-10.318,23-23 S37.682,2,25,2z M36.57,33.116c-0.492,1.362-2.852,2.605-3.986,2.772c-1.018,0.149-2.306,0.213-3.72-0.231 c-0.857-0.27-1.957-0.628-3.366-1.229c-5.923-2.526-9.791-8.415-10.087-8.804C15.116,25.235,13,22.463,13,19.594 s1.525-4.28,2.067-4.864c0.542-0.584,1.181-0.73,1.575-0.73s0.787,0.005,1.132,0.021c0.363,0.018,0.85-0.137,1.329,1.001 c0.492,1.168,1.673,4.037,1.819,4.33c0.148,0.292,0.246,0.633,0.05,1.022c-0.196,0.389-0.294,0.632-0.59,0.973 s-0.62,0.76-0.886,1.022c-0.296,0.291-0.603,0.606-0.259,1.19c0.344,0.584,1.529,2.493,3.285,4.039 c2.255,1.986,4.158,2.602,4.748,2.894c0.59,0.292,0.935,0.243,1.279-0.146c0.344-0.39,1.476-1.703,1.869-2.286 s0.787-0.487,1.329-0.292c0.542,0.194,3.445,1.604,4.035,1.896c0.59,0.292,0.984,0.438,1.132,0.681 C37.062,30.587,37.062,31.755,36.57,33.116z">
               </path>
             </svg>
-            Pedir por WhatsApp
+            WhatsApp
           </button>
         </div>
       </div>
