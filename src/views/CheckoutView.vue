@@ -33,6 +33,7 @@ const pago = ref({
 const fechaTransaccion = ref('') // <-- AÑADE ESTE NUEVO REF
 
 
+
 const maxDate = computed(() => {
   const today = new Date();
   const year = today.getFullYear();
@@ -185,9 +186,20 @@ watch(() => pago.value.metodo_pago_id, async (newId) => {
   }
 });
 
-// --- Lógica de Mapa y Cupón (sin cambios, no se muestra por brevedad) ---
 function onMarkerDragEnd(event) {
   markerLatLng.value = [event.target.getLatLng().lat, event.target.getLatLng().lng]
+}
+
+function getVariantSummary(item) {
+  // Verificamos si hay variantes y configuración
+  if (!item.variants || Object.keys(item.variants).length === 0) return [];
+  if (!item.configuracion_variantes) return []; // Si no hay config, no podemos saber los títulos
+
+  // Mapeamos los índices guardados a sus títulos reales
+  return Object.entries(item.variants).map(([groupIndex, options]) => {
+    // Unimos las opciones con comas (ej: "Chocolate, Maní")
+    return ` ${options.join(', ')}`;
+  }).filter(text => text !== null); // Limpieza final
 }
 
 async function getUserLocation() {
@@ -312,6 +324,7 @@ async function procesarPedido() {
       producto_id: item.id,
       cantidad: item.quantity,
       precio_unitario: item.precio,
+      variantes_elegidas: item.variants || null
     }))
     const { error: detallesError } = await supabase.from('detalles_pedido').insert(detallesPedido)
     if (detallesError) throw detallesError
@@ -477,9 +490,17 @@ async function procesarPedido() {
           <h2 class="text-2xl font-bold border-b pb-4">Resumen del Pedido</h2>
 
           <ul class="space-y-2 my-4">
-            <li v-for="item in cartStore.items" :key="item.id" class="flex justify-between">
-              <span>{{ item.nombre }} x {{ item.quantity }}</span>
-              <span>${{ (item.precio * item.quantity).toFixed(2) }}</span>
+            <li v-for="item in cartStore.items" :key="item.id" class="flex justify-between border-b pb-2 last:border-0">
+              <div class="flex-grow pr-2">
+                <span class="font-medium text-gray-800">{{ item.nombre }} x {{ item.quantity }}</span>
+
+                <div v-if="item.variants && Object.keys(item.variants).length > 0" class="mt-0.5">
+                  <p v-for="(line, idx) in getVariantSummary(item)" :key="idx" class="text-xs text-gray-500">
+                    {{ line }}
+                  </p>
+                </div>
+              </div>
+              <span class="font-semibold text-gray-700">${{ (item.precio * item.quantity).toFixed(2) }}</span>
             </li>
           </ul>
 

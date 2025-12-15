@@ -51,18 +51,12 @@ function onShowDetails() {
       <img :src="producto.foto_url" :alt="producto.nombre"
         class="w-full h-40 md:h-full object-cover rounded-lg bg-gray-50">
 
-      <button @click.stop="onAddToCart" :disabled="isRecentlyAdded"
-        class="absolute -bottom-2 -right-2 md:bottom-1 md:right-1 bg-white hover:bg-gray-50 text-brand-fucsia border border-gray-200 rounded-full w-9 h-9 flex items-center justify-center shadow-md transition-transform transform active:scale-90 z-10"
-        :class="{ 'bg-green-100 text-green-600 border-green-200': isRecentlyAdded }">
-        <svg v-if="!isRecentlyAdded" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+      <button @click.stop="onShowDetails"
+        class="absolute -bottom-2 -right-2 md:bottom-1 md:right-1 bg-white hover:bg-gray-50 text-brand-fucsia border border-gray-200 rounded-full w-9 h-9 flex items-center justify-center shadow-md transition-transform transform active:scale-90 z-10">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
           stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-
-        <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-          stroke="currentColor" class="w-5 h-5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-        </svg>
+        </svg>no, dame lo que significa
       </button>
     </div>
 

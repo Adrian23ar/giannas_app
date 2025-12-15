@@ -124,6 +124,14 @@ watch(route, () => {
               <span v-if="isSidebarOpen">Pedidos Especiales</span>
             </RouterLink>
           </li>
+          <li>
+            <RouterLink to="/admin/configuracion"
+              class="flex items-center gap-4 py-3 hover:bg-white/10 transition-colors"
+              :class="[isSidebarOpen ? 'px-6' : 'px-0 justify-center', { 'bg-brand-fucsia': route.path === '/admin/configuracion' }]">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 14 14"><path fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round" d="m5.23 2.25l.43-1.11A1 1 0 0 1 6.59.5h.82a1 1 0 0 1 .93.64l.43 1.11l1.46.84l1.18-.18a1 1 0 0 1 1 .49l.4.7a1 1 0 0 1-.08 1.13l-.73.93v1.68l.75.93a1 1 0 0 1 .08 1.13l-.4.7a1 1 0 0 1-1 .49l-1.18-.18l-1.46.84l-.43 1.11a1 1 0 0 1-.93.64h-.84a1 1 0 0 1-.93-.64l-.43-1.11l-1.46-.84l-1.18.18a1 1 0 0 1-1-.49l-.4-.7a1 1 0 0 1 .08-1.13L2 7.84V6.16l-.75-.93a1 1 0 0 1-.08-1.13l.4-.7a1 1 0 0 1 1-.49l1.18.18zM5 7a2 2 0 1 0 4 0a2 2 0 0 0-4 0"/></svg>
+              <span v-if="isSidebarOpen">Configuración</span>
+            </RouterLink>
+          </li>
         </ul>
         <div class="border-t border-white/10">
           <button @click="handleLogout" class="w-full flex items-center py-4 gap-4 hover:bg-white/10 transition-colors"
