@@ -1,18 +1,24 @@
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { visualizer } from 'rollup-plugin-visualizer' // <-- Importa
+import { visualizer } from 'rollup-plugin-visualizer'
 
-// https://vite.dev/config/
+// 1. IMPORTAR EL PLUGIN
+import viteCompression from 'vite-plugin-compression';
+
 export default defineConfig({
   plugins: [
     vue(),
     visualizer({
       open: true,
-      filename: 'dist/stats.html', // Nombre del archivo de reporte
+      filename: 'dist/stats.html',
     }),
-    // vueDevTools(),
+    // 2. ACTIVAR COMPRESIÓN
+    viteCompression({
+      algorithm: 'brotliCompress', // Usa 'gzip' si prefieres
+      threshold: 10240, // Solo comprime si pesa más de 10kb
+      deleteOriginFile: false
+    })
   ],
   resolve: {
     alias: {
@@ -25,10 +31,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/@supabase')) {
-            return 'supabase-chunk'; // Agrupa todo lo de supabase en un solo archivo
-          }
+        manualChunks: {
+          'vendor-core': ['vue', 'vue-router', 'pinia'],
+          'vendor-maps': ['leaflet', '@vue-leaflet/vue-leaflet'],
+          'vendor-charts': ['chart.js', 'vue-chartjs'],
+          'vendor-pdf': ['jspdf', 'html2canvas'],
+          'vendor-ui': ['swiper', 'vue-toastification'],
+          'vendor-supabase': ['@supabase/supabase-js']
         }
       }
     }

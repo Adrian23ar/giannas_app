@@ -36,7 +36,7 @@ watch([searchTerm, selectedCategoryId, priceRange], () => {
     </div>
 
     <div>
-      <h3 class="font-semibold mb-2 text-sm text-gray-600">Categorías</h3>
+      <p class="font-semibold mb-2 text-sm text-gray-600">Categorías</p>
       <div class="flex flex-wrap gap-2">
         <button @click="selectedCategoryId = null"
           :class="!selectedCategoryId ? 'bg-brand-fucsia text-white' : 'bg-gray-200 text-gray-700'"

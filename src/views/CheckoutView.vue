@@ -13,6 +13,7 @@ import { incrementCouponUsage } from '@/services/couponService'
 import { getLatestExchangeRate } from '@/services/exchangeRateService'
 // 1. NUEVO IMPORT: Servicio de configuración
 import { configService } from '@/services/configService'
+import { loadRecaptcha } from '@/utils/recaptchaLoader'
 
 const cartStore = useCartStore()
 const userStore = useUserStore()
@@ -172,7 +173,6 @@ onMounted(async () => {
     cliente.value.telefono = userStore.userPhone;
   }
 
-  // Carga Paralela: Métodos de Pago y Configuración
   try {
     const [methods, config] = await Promise.all([
       paymentMethodService.getActiveMethods(),
@@ -187,10 +187,13 @@ onMounted(async () => {
     toast.error('Error al cargar configuraciones iniciales.');
   }
 
-  if (window.grecaptcha && window.grecaptcha.render) {
-    renderRecaptcha();
-  } else {
-    window.addEventListener('recaptcha-loaded', renderRecaptcha);
+  // NUEVA LÓGICA DE RECAPTCHA DINÁMICO
+  try {
+    await loadRecaptcha() // Descarga el script si no existe
+    renderRecaptcha()     // Renderiza el widget
+  } catch (e) {
+    console.error('Error cargando ReCAPTCHA', e)
+    toast.error('Error de conexión con seguridad. Recarga la página.')
   }
 });
 
@@ -441,19 +444,19 @@ async function procesarPedido() {
 
           <div class="space-y-3">
             <label class="flex items-center gap-2 p-3 border rounded-md cursor-pointer hover:bg-gray-50"
-                   :class="{'border-brand-fucsia ring-1 ring-brand-fucsia bg-pink-50': metodoEntrega === 'recogida'}">
+              :class="{ 'border-brand-fucsia ring-1 ring-brand-fucsia bg-pink-50': metodoEntrega === 'recogida' }">
               <input type="radio" v-model="metodoEntrega" value="recogida" name="entrega" class="accent-brand-fucsia">
               <span class="font-medium">Retiro personal (Inmediato)</span>
             </label>
 
             <label class="flex items-center gap-2 p-3 border rounded-md cursor-pointer hover:bg-gray-50"
-                   :class="{'border-brand-fucsia ring-1 ring-brand-fucsia bg-pink-50': metodoEntrega === 'envio'}">
+              :class="{ 'border-brand-fucsia ring-1 ring-brand-fucsia bg-pink-50': metodoEntrega === 'envio' }">
               <input type="radio" v-model="metodoEntrega" value="envio" name="entrega" class="accent-brand-fucsia">
               <span class="font-medium">Delivery (Inmediato)</span>
             </label>
 
             <label class="flex items-center gap-2 p-3 border rounded-md cursor-pointer hover:bg-gray-50"
-                   :class="{'border-brand-fucsia ring-1 ring-brand-fucsia bg-pink-50': metodoEntrega === 'agendar'}">
+              :class="{ 'border-brand-fucsia ring-1 ring-brand-fucsia bg-pink-50': metodoEntrega === 'agendar' }">
               <input type="radio" v-model="metodoEntrega" value="agendar" name="entrega" class="accent-brand-fucsia">
               <span class="font-medium">Agendar Pedido (Fecha futura)</span>
             </label>
@@ -469,44 +472,47 @@ async function procesarPedido() {
             </div>
             <div style="height:300px; width:100%;" class="rounded-md overflow-hidden border">
               <l-map ref="map" v-model:zoom="zoom" :center="mapCenter">
-                <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base" name="OpenStreetMap"></l-tile-layer>
+                <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base"
+                  name="OpenStreetMap"></l-tile-layer>
                 <l-marker :lat-lng="markerLatLng" :draggable="true" @moveend="onMarkerDragEnd"></l-marker>
               </l-map>
             </div>
-            <textarea v-model="direccion"
-              placeholder="Punto de referencia (ej: portón rojo, frente a farmacia)" rows="2" required
+            <textarea v-model="direccion" placeholder="Punto de referencia (ej: portón rojo, frente a farmacia)"
+              rows="2" required
               class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia outline-none"></textarea>
           </div>
 
-          <div v-if="metodoEntrega === 'agendar'" class="mt-6 p-4 bg-pink-50/50 border border-pink-100 rounded-lg animate-fadeIn">
+          <div v-if="metodoEntrega === 'agendar'"
+            class="mt-6 p-4 bg-pink-50/50 border border-pink-100 rounded-lg animate-fadeIn">
             <h3 class="font-bold text-brand-morado mb-3">Detalles del Agendado</h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Fecha deseada</label>
                 <input type="date" v-model="agendarFecha" :min="minAgendarDate" @change="validarFechaAgendada"
-                       class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia outline-none">
+                  class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia outline-none">
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Hora estimada</label>
                 <input type="time" v-model="agendarHora" @change="validarHoraAgendada"
-                       class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia outline-none">
+                  class="w-full p-2 border rounded-md focus:ring-2 focus:ring-brand-fucsia outline-none">
               </div>
             </div>
 
             <p class="text-sm font-medium text-gray-700 mb-2">¿Cómo deseas recibirlo?</p>
             <div class="flex flex-col sm:flex-row gap-4">
-               <label class="flex items-center gap-2 cursor-pointer">
-                 <input type="radio" v-model="agendarTipo" value="recogida" class="accent-brand-fucsia">
-                 <span class="text-sm">Retiro personalmente</span>
-               </label>
-               <label class="flex items-center gap-2 cursor-pointer">
-                 <input type="radio" v-model="agendarTipo" value="envio" class="accent-brand-fucsia">
-                 <span class="text-sm">Delivery (Dirección a coordinar)</span>
-               </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" v-model="agendarTipo" value="recogida" class="accent-brand-fucsia">
+                <span class="text-sm">Retiro personalmente</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" v-model="agendarTipo" value="envio" class="accent-brand-fucsia">
+                <span class="text-sm">Delivery (Dirección a coordinar)</span>
+              </label>
             </div>
             <p v-if="agendarTipo === 'envio'" class="text-xs text-gray-500 mt-2 italic">
-             <span class="text-red-500 text-sm">*</span> La dirección exacta se coordinará vía WhatsApp tras confirmar el pedido.
+              <span class="text-red-500 text-sm">*</span> La dirección exacta se coordinará vía WhatsApp tras confirmar
+              el pedido.
             </p>
           </div>
         </div>
@@ -514,16 +520,18 @@ async function procesarPedido() {
         <div class="bg-white p-6 rounded-lg shadow-md">
           <h2 class="text-2xl font-bold mb-4">3. Registra tu Pago</h2>
 
-          <div v-if="metodoEntrega === 'agendar'" class="mb-4 p-3 bg-blue-50 text-blue-800 text-sm rounded-md border border-blue-100 flex items-start gap-2">
-             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 shrink-0">
-               <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-             </svg>
-             <span>Para pedidos agendados solo aceptamos pagos digitales (No Efectivo).</span>
+          <div v-if="metodoEntrega === 'agendar'"
+            class="mb-4 p-3 bg-blue-50 text-blue-800 text-sm rounded-md border border-blue-100 flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+              stroke="currentColor" class="w-5 h-5 shrink-0">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <span>Para pedidos agendados solo aceptamos pagos digitales (No Efectivo).</span>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div v-for="method in availablePaymentMethods" :key="method.id"
-              @click="pago.metodo_pago_id = method.id"
+            <div v-for="method in availablePaymentMethods" :key="method.id" @click="pago.metodo_pago_id = method.id"
               class="p-4 border rounded-lg cursor-pointer transition-all duration-200"
               :class="pago.metodo_pago_id === method.id ? 'border-brand-fucsia bg-fuchsia-50 ring-2 ring-brand-fucsia' : 'border-gray-200 hover:border-gray-400'">
               <p class="font-bold text-gray-800">{{ method.nombre }}</p>
@@ -532,35 +540,47 @@ async function procesarPedido() {
           </div>
 
           <div v-if="selectedPaymentMethod" class="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
-             <h4 class="font-bold text-gray-700 mb-2">Datos para realizar el pago:</h4>
-             <div class="space-y-1 text-sm text-gray-600">
-               <div v-if="selectedPaymentMethod.detalles?.banco"><strong>Banco:</strong> {{ selectedPaymentMethod.detalles.banco }}</div>
-               <div v-if="selectedPaymentMethod.detalles?.telefono"><strong>Teléfono:</strong> {{ selectedPaymentMethod.detalles.telefono }}</div>
-               <div v-if="selectedPaymentMethod.detalles?.cuenta"><strong>Nro. Cuenta:</strong> {{ selectedPaymentMethod.detalles.cuenta }}</div>
-               <div v-if="selectedPaymentMethod.detalles?.ci"><strong>Cédula/RIF:</strong> {{ selectedPaymentMethod.detalles.ci }}</div>
-               <div v-if="selectedPaymentMethod.detalles?.titular"><strong>Titular:</strong> {{ selectedPaymentMethod.detalles.titular }}</div>
-               <div v-if="selectedPaymentMethod.detalles?.correo"><strong>Correo:</strong> {{ selectedPaymentMethod.detalles.correo }}</div>
-               <div v-if="selectedPaymentMethod.detalles?.extra" class="italic text-xs mt-1">{{ selectedPaymentMethod.detalles.extra }}</div>
-             </div>
+            <h4 class="font-bold text-gray-700 mb-2">Datos para realizar el pago:</h4>
+            <div class="space-y-1 text-sm text-gray-600">
+              <div v-if="selectedPaymentMethod.detalles?.banco"><strong>Banco:</strong> {{
+                selectedPaymentMethod.detalles.banco }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.telefono"><strong>Teléfono:</strong> {{
+                selectedPaymentMethod.detalles.telefono }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.cuenta"><strong>Nro. Cuenta:</strong> {{
+                selectedPaymentMethod.detalles.cuenta }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.ci"><strong>Cédula/RIF:</strong> {{
+                selectedPaymentMethod.detalles.ci }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.titular"><strong>Titular:</strong> {{
+                selectedPaymentMethod.detalles.titular }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.correo"><strong>Correo:</strong> {{
+                selectedPaymentMethod.detalles.correo }}</div>
+              <div v-if="selectedPaymentMethod.detalles?.extra" class="italic text-xs mt-1">{{
+                selectedPaymentMethod.detalles.extra }}</div>
+            </div>
           </div>
 
           <div class="text-center text-sm text-gray-600 my-4 p-3 bg-blue-50 rounded-lg">
-            <p>Para pagos con <strong>Zelle</strong>, por favor contáctanos vía <a href="https://wa.me/+584122741450" class="text-brand-fucsia font-bold hover:underline" target="_blank">WhatsApp</a> para coordinar.</p>
+            <p>Para pagos con <strong>Zelle</strong>, por favor contáctanos vía <a href="https://wa.me/+584122741450"
+                class="text-brand-fucsia font-bold hover:underline" target="_blank">WhatsApp</a> para coordinar.</p>
           </div>
 
           <label class="block mb-2">
             <span class="text-gray-700 font-medium text-sm">Monto en Dólares (USD)</span>
-            <input :value="cartStore.finalTotal.toFixed(2)" type="number" class="w-full font-bold p-2 border rounded-md bg-gray-100" readonly>
+            <input :value="cartStore.finalTotal.toFixed(2)" type="number"
+              class="w-full font-bold p-2 border rounded-md bg-gray-100" readonly>
           </label>
 
-          <div v-if="selectedPaymentMethod?.tipo === 'pago-movil' || selectedPaymentMethod?.tipo === 'transferencia'" class="mb-4">
-             <div v-if="isLoadingRate" class="text-left text-gray-500 text-sm p-2 bg-gray-50">Calculando...</div>
-             <div v-if="totalInBolivares && !isLoadingRate">
-               <label class="block">
-                 <span class="text-gray-700 font-medium text-sm">Monto en Bolívares (VES)</span>
-                 <input :value="totalInBolivares.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })" type="text" class="w-full font-bold p-2 border rounded-md bg-gray-100" readonly>
-               </label>
-             </div>
+          <div v-if="selectedPaymentMethod?.tipo === 'pago-movil' || selectedPaymentMethod?.tipo === 'transferencia'"
+            class="mb-4">
+            <div v-if="isLoadingRate" class="text-left text-gray-500 text-sm p-2 bg-gray-50">Calculando...</div>
+            <div v-if="totalInBolivares && !isLoadingRate">
+              <label class="block">
+                <span class="text-gray-700 font-medium text-sm">Monto en Bolívares (VES)</span>
+                <input
+                  :value="totalInBolivares.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"
+                  type="text" class="w-full font-bold p-2 border rounded-md bg-gray-100" readonly>
+              </label>
+            </div>
           </div>
 
           <div v-if="showPaymentReference" class="space-y-4 animate-fadeIn">
@@ -588,7 +608,8 @@ async function procesarPedido() {
               <div class="flex-grow pr-2">
                 <span class="font-medium text-gray-800">{{ item.nombre }} x {{ item.quantity }}</span>
                 <div v-if="item.variants && Object.keys(item.variants).length > 0" class="mt-1">
-                  <p v-for="(line, idx) in getVariantSummary(item)" :key="idx" class="text-xs text-gray-500">{{ line }}</p>
+                  <p v-for="(line, idx) in getVariantSummary(item)" :key="idx" class="text-xs text-gray-500">{{ line }}
+                  </p>
                 </div>
               </div>
               <span class="font-semibold text-gray-700">${{ (item.precio * item.quantity).toFixed(2) }}</span>
@@ -596,17 +617,23 @@ async function procesarPedido() {
           </ul>
 
           <div class="border-t pt-2">
-            <a v-if="!cartStore.appliedCoupon" @click="showCouponInput = !showCouponInput" class="text-sm text-brand-fucsia font-semibold cursor-pointer hover:underline">¿Tienes un cupón?</a>
+            <a v-if="!cartStore.appliedCoupon" @click="showCouponInput = !showCouponInput"
+              class="text-sm text-brand-fucsia font-semibold cursor-pointer hover:underline">¿Tienes un cupón?</a>
             <Transition name="slide-fade">
               <div v-if="showCouponInput && !cartStore.appliedCoupon" class="flex flex-col md:flex-row gap-2 mt-2">
-                <input v-model="couponCode" type="text" placeholder="Código" class="flex-grow p-2 border rounded-md text-sm">
-                <CustomButton @click.prevent="handleApplyCoupon" :disabled="isLoading">{{ isLoading ? '...' : 'Aplicar' }}</CustomButton>
+                <input v-model="couponCode" type="text" placeholder="Código"
+                  class="flex-grow p-2 border rounded-md text-sm">
+                <CustomButton @click.prevent="handleApplyCoupon" :disabled="isLoading">{{ isLoading ? '...' : 'Aplicar'
+                  }}</CustomButton>
               </div>
             </Transition>
           </div>
 
           <div class="space-y-2 mt-4 pt-2 border-t">
-            <div class="flex justify-between items-center"><p class="text-gray-600">Subtotal</p><p class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</p></div>
+            <div class="flex justify-between items-center">
+              <p class="text-gray-600">Subtotal</p>
+              <p class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</p>
+            </div>
             <Transition name="fade">
               <div v-if="cartStore.appliedCoupon" class="flex justify-between items-center text-green-600">
                 <p>Descuento <button @click="handleRemoveCoupon" class="text-red-500 text-xs">(x)</button></p>
@@ -614,7 +641,8 @@ async function procesarPedido() {
               </div>
             </Transition>
             <div class="flex justify-between items-center font-bold text-lg">
-              <p>Total a Pagar</p><p class="text-brand-fucsia text-xl">${{ cartStore.finalTotal.toFixed(2) }}</p>
+              <p>Total a Pagar</p>
+              <p class="text-brand-fucsia text-xl">${{ cartStore.finalTotal.toFixed(2) }}</p>
             </div>
           </div>
 
@@ -634,8 +662,16 @@ async function procesarPedido() {
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-in-out;
 }
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

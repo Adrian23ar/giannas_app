@@ -1,9 +1,11 @@
 <script setup>
+//src\views\RegisterView.vue
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { signUp } from '@/services/authService' // <-- Usamos el servicio
 import CustomButton from '@/components/CustomButton.vue'
+import { loadRecaptcha } from '@/utils/recaptchaLoader'
 
 const router = useRouter()
 const toast = useToast()
@@ -27,25 +29,19 @@ const renderRecaptcha = () => {
     window.grecaptcha.ready(() => {
       recaptchaWidgetId.value = window.grecaptcha.render(recaptchaContainer.value, {
         'sitekey': '6LegfJ8rAAAAABWBru2sS_rlb5G7GHPie-V4ZD8-',
-        // Opcional: puedes añadir un callback para obtener el token
-        // 'callback': (token) => {
-        //   console.log('reCAPTCHA token:', token);
-        //   // Aquí guardarías el token para enviarlo con el formulario
-        // }
       });
     });
   }
 };
 
-onMounted(() => {
-  // Si el script ya se cargó antes de que el componente se montara
-  if (window.grecaptcha && window.grecaptcha.render) {
-    renderRecaptcha();
-  } else {
-    // Si no, escucha el evento personalizado que creamos en index.html
-    window.addEventListener('recaptcha-loaded', renderRecaptcha);
+onMounted(async () => {
+  try {
+    await loadRecaptcha()
+    renderRecaptcha()
+  } catch (e) {
+    console.error('Error cargando ReCAPTCHA', e)
   }
-});
+})
 
 // Es una buena práctica limpiar el listener cuando el componente se destruye
 onUnmounted(() => {

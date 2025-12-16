@@ -143,7 +143,7 @@ function onAddToCart() {
                   class="bg-pink-50/30 p-4 rounded-xl border border-pink-100">
 
                   <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-bold text-gray-800 text-base">{{ grupo.titulo }}</h3>
+                    <p class="font-bold text-gray-800 text-base">{{ grupo.titulo }}</p>
                     <span v-if="grupo.min > 0"
                       class="text-[10px] font-bold uppercase tracking-wider bg-brand-morado text-white px-2 py-1 rounded shadow-sm">
                       Requerido

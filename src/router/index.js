@@ -6,7 +6,7 @@ import { useUserStore } from '@/stores/userStore'
 // Los Layouts se pueden mantener con importación estática, ya que son la base
 import AdminLayout from '../layouts/AdminLayout.vue'
 import ClientLayout from '../layouts/ClientLayout.vue'
-
+import CatalogView from '../views/CatalogView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -15,8 +15,7 @@ const router = createRouter({
       path: '/',
       component: ClientLayout,
       children: [
-        // AQUÍ ESTÁ LA MAGIA: CADA VISTA SE CARGA BAJO DEMANDA
-        { path: '', name: 'catalog', component: () => import('../views/CatalogView.vue') },
+        { path: '', name: 'catalog', component: CatalogView},
         { path: 'cart', name: 'cart', component: () => import('../views/CartView.vue') },
         { path: 'checkout', name: 'checkout', component: () => import('../views/CheckoutView.vue') },
         { path: 'confirmation/:orderId', name: 'confirmation', component: () => import('../views/OrderConfirmationView.vue') },
@@ -35,14 +34,13 @@ const router = createRouter({
     {
       path: '/admin/login',
       name: 'admin-login',
-      component: () => import('../views/LoginView.vue'), // También aplicamos lazy-loading aquí
+      component: () => import('../views/LoginView.vue'),
     },
     {
       path: '/admin',
       component: AdminLayout,
       meta: { requiresAuth: true },
       children: [
-        // Chart.js y otras librerías de admin solo se cargarán al entrar a estas rutas
         { path: '', name: 'admin-dashboard', component: () => import('../views/AdminDashboardView.vue') },
         { path: 'productos', name: 'Productos', component: () => import('../views/AdminProductosView.vue') },
         { path: 'categorias', name: 'Categorias', component: () => import('../views/AdminCategoriasView.vue') },

@@ -1,6 +1,6 @@
 <script setup>
 // src/views/CatalogView.vue
-import { ref, onMounted, watch } from 'vue' // Usamos 'watch' para la reactividad
+import { ref, onMounted, watch, defineAsyncComponent } from 'vue' // Usamos 'watch' para la reactividad
 import { useCartStore } from '@/stores/cartStore'
 
 // Importamos todos los servicios que necesitamos
@@ -8,12 +8,19 @@ import { getFilteredProducts } from '@/services/productService'
 import { getActiveSectionsWithProducts } from '@/services/sectionService'
 import { getCategories } from '@/services/categoryService'
 
+import SkeletonLoader from '@/components/SkeletonLoader.vue' // Importa el esqueleto
+
 // Importamos todos los componentes que usaremos en la vista
 import ProductCard from '@/components/ProductCard.vue'
-import ProductDetailModal from '@/components/ProductDetailModal.vue'
-import ProductSlider from '@/components/ProductSlider.vue'
-import ProductFilters from '@/components/ProductFilters.vue'
-import WelcomeModal from '@/components/WelcomeModal.vue'
+const ProductSlider = defineAsyncComponent({
+  loader: () => import('@/components/ProductSlider.vue'),
+  loadingComponent: SkeletonLoader, // Muestra esto mientras carga
+  delay: 0, // Muestralo inmediatamente
+  timeout: 3000
+})
+const ProductFilters = defineAsyncComponent(() => import('@/components/ProductFilters.vue'))
+const ProductDetailModal = defineAsyncComponent(() => import('@/components/ProductDetailModal.vue'))
+const WelcomeModal = defineAsyncComponent(() => import('@/components/WelcomeModal.vue'))
 
 // --- ESTADO PRINCIPAL DE LA VISTA ---
 const cartStore = useCartStore()
@@ -153,7 +160,7 @@ onMounted(fetchInitialData)
 
 <template>
   <div class="pb-4 px-4 sm:px-6 lg:px-8">
-<WelcomeModal />
+    <WelcomeModal />
     <section class="mb-12">
       <picture>
         <source media="(max-width: 680px)" srcset="/welcome.webp">
@@ -162,8 +169,8 @@ onMounted(fetchInitialData)
           srcset="/welcome-640w.webp 640w, /welcome-768w.webp 768w, /welcome-1024w.webp 1024w, /welcome-1280w.webp 1280w, /welcome-1536w.webp 1536w, /welcome-1872w.webp 1872w"
           sizes="(max-width: 1872px) 100vw, 1872px">
 
-        <img src="/welcome-1536w.webp" alt="Bienvenido a Gianna's Cookies" width="1872" height="480" loading="lazy"
-          class="w-full md:h-auto rounded-lg shadow-lg object-cover">
+        <img src="/welcome-1536w.webp" alt="Bienvenido a Gianna's Cookies" width="1872" height="480"
+          fetchpriority="high" class="w-full md:h-auto rounded-lg shadow-lg object-cover">
       </picture>
       <p class="text-xs text-center mt-4 text-gray-600 italic">Ciudad Ojeda - Estado Zulia</p>
     </section>
@@ -174,7 +181,7 @@ onMounted(fetchInitialData)
 
     <div v-else>
 
-      <div v-if="sections.length > 0" class="space-y-16 mb-16">
+      <div v-if="sections.length > 0" class="space-y-16 mb-16 min-h-[300px]">
         <ProductSlider v-for="section in sections" :key="section.id" :section="section"
           @show-details="handleShowDetails" @add-to-cart="handleAddToCartFromSlider"
           :recently-added-id="recentlyAddedInSliderId" />
