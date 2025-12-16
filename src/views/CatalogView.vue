@@ -13,6 +13,7 @@ import ProductCard from '@/components/ProductCard.vue'
 import ProductDetailModal from '@/components/ProductDetailModal.vue'
 import ProductSlider from '@/components/ProductSlider.vue'
 import ProductFilters from '@/components/ProductFilters.vue'
+import WelcomeModal from '@/components/WelcomeModal.vue'
 
 // --- ESTADO PRINCIPAL DE LA VISTA ---
 const cartStore = useCartStore()
@@ -152,7 +153,7 @@ onMounted(fetchInitialData)
 
 <template>
   <div class="pb-4 px-4 sm:px-6 lg:px-8">
-
+<WelcomeModal />
     <section class="mb-12">
       <picture>
         <source media="(max-width: 680px)" srcset="/welcome.webp">
@@ -164,6 +165,7 @@ onMounted(fetchInitialData)
         <img src="/welcome-1536w.webp" alt="Bienvenido a Gianna's Cookies" width="1872" height="480" loading="lazy"
           class="w-full md:h-auto rounded-lg shadow-lg object-cover">
       </picture>
+      <p class="text-xs text-center mt-4 text-gray-600 italic">Ciudad Ojeda - Estado Zulia</p>
     </section>
 
     <div v-if="loading.initial" class="text-center py-12">
