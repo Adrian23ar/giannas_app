@@ -25,8 +25,6 @@ const router = createRouter({
         { path: 'olvide-clave', name: 'forgot-password', component: () => import('../views/ForgotPasswordView.vue') },
         { path: 'actualizar-clave', name: 'update-password', component: () => import('../views/UpdatePasswordView.vue') },
         { path: 'mi-cuenta', name: 'account', component: () => import('../views/AccountView.vue') },
-        { path: 'pedidos-especiales', name: 'special-order', component: () => import('@/views/SpecialOrderView.vue') },
-        { path: 'solicitud-confirmada', name: 'special-order-confirmation', component: () => import('@/views/OrderRequestConfirmation.vue') }
       ],
     },
 
@@ -49,7 +47,6 @@ const router = createRouter({
         { path: 'metodos-pago', name: 'Metodos de Pago', component: () => import('../views/AdminPaymentsView.vue') },
         { path: 'tasa-de-cambio', name: 'Tasa de Cambio', component: () => import('../views/AdminExchangeRateView.vue') },
         { path: 'secciones', name: 'Secciones', component: () => import('@/views/AdminSectionsView.vue') },
-        { path: 'pedidos-especiales', name: 'Pedidos Especiales', component: () => import('@/views/AdminSpecialOrdersView.vue') },
         { path: 'configuracion', name: 'Configuracion', component: () => import('@/views/AdminConfigView.vue') }
       ],
     },
