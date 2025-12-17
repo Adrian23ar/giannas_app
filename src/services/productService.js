@@ -173,14 +173,6 @@ export async function getFilteredProducts(filters = {}) {
     query = query.eq('categoria_id', filters.categoryId)
   }
 
-  // 3. Aplicar filtro de rango de precios
-  if (filters.minPrice) {
-    query = query.gte('precio', filters.minPrice)
-  }
-  if (filters.maxPrice) {
-    query = query.lte('precio', filters.maxPrice)
-  }
-
   // Ejecutamos la consulta final
   const { data, error } = await query.order('created_at', { ascending: false });
 

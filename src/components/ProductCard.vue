@@ -13,11 +13,7 @@ defineProps({
   }
 })
 
-const emit = defineEmits(['addToCart', 'showDetails'])
-
-function onAddToCart() {
-  emit('addToCart')
-}
+const emit = defineEmits(['showDetails'])
 
 function onShowDetails() {
   emit('showDetails')

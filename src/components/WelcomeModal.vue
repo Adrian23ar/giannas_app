@@ -35,12 +35,18 @@ function closeModal() {
 
       <div class="relative bg-white w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
-        <div class="h-40 bg-pink-100 relative shrink-0">
-          <img src="/welcome.webp" alt="Bienvenido a Gianna's" class="w-full h-full object-cover">
+        <div class="h-auto w-full bg-pink-100 relative shrink-0">
+          <picture>
+            <source media="(max-width: 640px)" srcset="/welcome_modal_sm.webp">
+
+            <img src="/welcome_modal.webp" alt="Bienvenido a Gianna's Cookies" width="576" height="160"
+              fetchpriority="high" class="w-full h-full object-cover">
+          </picture>
           <div class="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent"></div>
         </div>
 
-        <div class="px-8 pt-2 pb-6 overflow-y-auto">
+        <div class="px-8 pt-2 pb-6 overflow-y-auto relative">
+
           <h2 class="text-2xl font-bold text-brand-morado text-center mb-2 leading-tight">
             ¡Bienvenid@ al Menú de <br><span class="text-brand-fucsia">Gianna's Cookies!</span>
           </h2>
@@ -66,7 +72,8 @@ function closeModal() {
               </div>
               <div>
                 <h3 class="font-bold text-gray-800 text-sm">2. Paga Online o Agenda</h3>
-                <p class="text-xs text-gray-500">Procesa tu pago directamente o agenda tu pedido para una fecha especial.</p>
+                <p class="text-xs text-gray-500">Procesa tu pago directamente o agenda tu pedido para una fecha
+                  especial.</p>
               </div>
             </div>
 
@@ -76,7 +83,8 @@ function closeModal() {
               </div>
               <div>
                 <h3 class="font-bold text-gray-800 text-sm">3. Guarda tu Orden</h3>
-                <p class="text-xs text-gray-500">Al finalizar, conserva tu número de pedido. ¡Cualquier duda contáctanos al WhatsApp!</p>
+                <p class="text-xs text-gray-500">Al finalizar, conserva tu número de pedido. ¡Cualquier duda contáctanos
+                  al WhatsApp!</p>
               </div>
             </div>
           </div>
@@ -91,10 +99,14 @@ function closeModal() {
           <label class="flex items-center justify-center gap-2 cursor-pointer group select-none">
             <div class="relative flex items-center">
               <input type="checkbox" v-model="dontShowAgain" class="peer sr-only">
-              <div class="w-5 h-5 border-2 border-gray-300 rounded peer-checked:bg-brand-fucsia peer-checked:border-brand-fucsia transition-colors"></div>
-              <CheckIcon class="absolute w-3.5 h-3.5 text-white left-0.5 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+              <div
+                class="w-5 h-5 border-2 border-gray-300 rounded peer-checked:bg-brand-fucsia peer-checked:border-brand-fucsia transition-colors">
+              </div>
+              <CheckIcon
+                class="absolute w-3.5 h-3.5 text-white left-0.5 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
             </div>
-            <span class="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">No volver a mostrar este mensaje</span>
+            <span class="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">No volver a mostrar este
+              mensaje</span>
           </label>
 
         </div>
@@ -123,6 +135,7 @@ function closeModal() {
 .modal-enter-from .relative {
   transform: scale(0.9) translateY(20px);
 }
+
 .modal-leave-to .relative {
   transform: scale(0.95) translateY(10px);
 }

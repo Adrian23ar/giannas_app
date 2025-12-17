@@ -1,4 +1,6 @@
 <script setup>
+// src/components/ProductSlider.vue
+import { defineProps, defineEmits } from 'vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Navigation } from 'swiper/modules';
 import ProductCard from '@/components/ProductCard.vue';
@@ -19,31 +21,29 @@ defineProps({
 });
 
 // Definimos los eventos que puede emitir este componente
-const emit = defineEmits(['showDetails', 'addToCart']);
+const emit = defineEmits(['showDetails']);
 
 // Pasamos los eventos del ProductCard hacia el padre (CatalogView)
 function onShowDetails(product) {
   emit('showDetails', product);
 }
 
-function onAddToCart(product) {
-  emit('addToCart', product);
-}
 </script>
 
 <template>
   <div class="mb-12">
     <p class="text-3xl font-bold text-brand-morado mb-4">{{ section.nombre }}</p>
-    <swiper :modules="[Navigation]" :slides-per-view="1.5" :space-between="20" :navigation="true" :breakpoints="{
+    <Swiper :modules="[Navigation]" :slides-per-view="1.5" :space-between="20" :navigation="true" :breakpoints="{
       640: { slidesPerView: 2.5 },
       768: { slidesPerView: 2.5 },
-      1024: { slidesPerView: 4.5 }
+      1024: { slidesPerView: 3.5 },
+      1440: { slidesPerView: 4.5 }
     }">
-      <swiper-slide v-for="product in section.productos" :key="product.id">
+      <SwiperSlide v-for="product in section.productos" :key="product.id">
         <ProductCard :producto="product" :is-recently-added="recentlyAddedId === product.id"
-          @show-details="onShowDetails(product)" @add-to-cart="onAddToCart(product)" />
-      </swiper-slide>
-    </swiper>
+          @show-details="onShowDetails(product)" />
+      </SwiperSlide>
+    </Swiper>
   </div>
 </template>
 

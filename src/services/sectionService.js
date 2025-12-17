@@ -127,7 +127,7 @@ export async function getActiveSectionsWithProducts() {
     .select(`
       id,
       nombre,
-      productos (id, nombre, descripcion, precio, foto_url, categorias(nombre))
+      productos (id, nombre, descripcion, precio, foto_url, categorias(nombre),configuracion_variantes)
     `)
     .eq('activo', true) // Solo trae las secciones marcadas como activas
     .not('productos', 'is', null); // Un pequeño truco para asegurar que solo trae secciones con productos
