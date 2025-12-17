@@ -79,10 +79,6 @@ const isMobileMenuOpen = ref(false) // <-- Estado para el menú móvil
           <div class="flex flex-col px-4 pt-2 pb-4 gap-3">
             <RouterLink @click="isMobileMenuOpen = false" to="/"
               class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Catálogo</RouterLink>
-            <RouterLink @click="isMobileMenuOpen = false" to="/pedidos-especiales"
-              class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">
-              Pedidos para Eventos
-            </RouterLink>
             <RouterLink @click="isMobileMenuOpen = false" to="/seguimiento"
               class="block text-brand-blanco hover:text-brand-morado transition-all font-medium">Seguimiento
             </RouterLink>

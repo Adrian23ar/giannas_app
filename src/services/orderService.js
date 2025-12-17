@@ -1,6 +1,5 @@
 // src/services/orderService.js
 import { supabase } from '../supabase'
-import { findSpecialOrderById } from './specialOrderService'
 
 /**
  * Obtiene todos los pedidos, ordenados por fecha de creación.
@@ -122,13 +121,7 @@ export const findAnyOrder = async (trackingId) => {
 
   const idString = trackingId.trim().toUpperCase();
 
-  if (idString.startsWith('SO-')) {
-    const numericId = parseInt(idString.replace('SO-', ''), 10);
-    if (isNaN(numericId)) throw new Error('El formato del ID de solicitud especial no es válido.');
-    return findSpecialOrderById(numericId);
-  } else {
-    const numericId = parseInt(idString, 10);
+  const numericId = parseInt(idString, 10);
     if (isNaN(numericId)) throw new Error('El formato del ID de pedido no es válido.');
     return findOrderById(numericId);
-  }
 }

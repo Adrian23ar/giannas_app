@@ -37,8 +37,6 @@ function closeModal() {
 
         <div class="h-auto w-full bg-pink-100 relative shrink-0">
           <picture>
-            <source media="(max-width: 640px)" srcset="/welcome_modal_sm.webp">
-
             <img src="/welcome_modal.webp" alt="Bienvenido a Gianna's Cookies" width="576" height="160"
               fetchpriority="high" class="w-full h-full object-cover">
           </picture>

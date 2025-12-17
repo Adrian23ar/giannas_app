@@ -34,7 +34,7 @@ async function searchOrder() {
 
     <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
       <form @submit.prevent="searchOrder" class="flex flex-col sm:flex-row gap-4">
-        <input v-model="trackingId" type="text" placeholder="Ej: 123 o SO-123"
+        <input v-model="trackingId" type="text" placeholder="Ej: 12"
           class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm" />
         <CustomButton type="submit" :disabled="isLoading">
           {{ isLoading ? 'Buscando...' : 'Buscar' }}
