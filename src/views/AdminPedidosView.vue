@@ -359,8 +359,7 @@ function formatVariantes(detalle) {
                 </div>
 
                 <div v-if="pedidoSeleccionado.metodo_entrega === 'envio'">
-                  <p class="text-gray-500 mb-1">Dirección:</p>
-                  <p class="font-medium bg-gray-50 p-2 rounded text-xs">{{ pedidoSeleccionado.direccion_envio }}</p>
+                  <p class="text-gray-500 mb-1">Dirección: <span class="font-medium bg-gray-50 rounded text-xs"> {{ pedidoSeleccionado.direccion_envio }}</span></p>
 
                   <a v-if="pedidoSeleccionado.latitud && pedidoSeleccionado.longitud"
                     :href="`https://www.google.com/maps?q=${pedidoSeleccionado.latitud},${pedidoSeleccionado.longitud}`"
@@ -399,7 +398,7 @@ function formatVariantes(detalle) {
             <div class="bg-gray-50 rounded-xl p-4 border flex-grow overflow-y-auto max-h-96 mb-6">
               <h3 class="font-bold text-gray-700 mb-4 sticky top-0 bg-gray-50 pb-2 border-b text-sm uppercase">Productos
               </h3>
-              <div class="space-y-3">
+              <div class="space-y-3 border-b pb-4">
                 <div v-for="item in pedidoSeleccionado.detalles_pedido" :key="item.id"
                   class="flex gap-3 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
                   <img :src="item.productos.foto_url" class="w-12 h-12 rounded object-cover bg-gray-200 shrink-0">
@@ -426,10 +425,26 @@ function formatVariantes(detalle) {
                 </div>
               </div>
 
-              <div class="flex justify-between items-center mt-4 pt-4 border-t font-bold text-lg">
-                <span>Total</span>
-                <span class="text-brand-fucsia">${{ pedidoSeleccionado.total.toFixed(2) }}</span>
+              <div class="pt-4">
+                <div v-if="pedidoSeleccionado.costo_envio > 0"
+                  class="flex justify-between items-center text-sm text-gray-600">
+                  <span>Costo de Envío</span>
+                  <span>+${{ Number(pedidoSeleccionado.costo_envio).toFixed(2) }}</span>
+                </div>
+                <div
+                  v-if="(pedidoSeleccionado.detalles_pedido.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0) + (pedidoSeleccionado.costo_envio || 0)) > pedidoSeleccionado.total"
+                  class="flex justify-between items-center text-sm text-green-600 font-medium">
+                  <span>Descuento Aplicado</span>
+                  <span>-${{((pedidoSeleccionado.detalles_pedido.reduce((acc, item) => acc + (item.cantidad *
+                    item.precio_unitario), 0) + (pedidoSeleccionado.costo_envio || 0)) -
+                    pedidoSeleccionado.total).toFixed(2) }}</span>
+                </div>
+                <div class="flex justify-between items-center border-t pt-2 mt-2 font-bold text-lg">
+                  <span>Total</span>
+                  <span class="text-brand-fucsia">${{ pedidoSeleccionado.total.toFixed(2) }}</span>
+                </div>
               </div>
+
             </div>
 
             <div class="mt-auto bg-white border rounded-xl p-4 shadow-sm">

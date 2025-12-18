@@ -25,7 +25,7 @@ const getOrderCompleteDetails = async (orderId) => {
         variantes_elegidas,
         productos ( nombre )
       )
-    `) // <--- AQUÍ FALTABA "variantes_elegidas"
+    `)
     .eq('id', orderId)
     .single();
 
@@ -46,6 +46,7 @@ onMounted(async () => {
   try {
     const details = await getOrderCompleteDetails(orderId);
     orderDetails.value = details;
+    console.log(details);
   } catch (err) {
     console.error("Error al obtener detalles del pedido:", err);
     error.value = err.message;

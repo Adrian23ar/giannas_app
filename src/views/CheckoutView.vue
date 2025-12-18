@@ -7,11 +7,13 @@ import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'vue-toastification'
 import { supabase } from '../supabase'
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet"
+import { MapPinIcon } from '@heroicons/vue/24/outline'
+
 import CustomButton from '@/components/CustomButton.vue'
 import { paymentMethodService } from '@/services/paymentMethodService'
 import { incrementCouponUsage } from '@/services/couponService'
 import { getLatestExchangeRate } from '@/services/exchangeRateService'
-// 1. NUEVO IMPORT: Servicio de configuración
+import { calculateShippingFee } from '@/services/deliveryService'
 import { configService } from '@/services/configService'
 import { loadRecaptcha } from '@/utils/recaptchaLoader'
 
@@ -53,10 +55,10 @@ const isLoadingRate = ref(false)
 
 // --- Lógica del Mapa ---
 const zoom = ref(14)
-const mapCenter = ref([10.196, -71.313])
-const markerLatLng = ref([10.196, -71.313])
+const mapCenter = ref([10.491021, -66.882181])
+const markerLatLng = ref([10.491021, -66.882181])
 const isLocating = ref(false)
-
+const deliveryInfo = ref({ distance: 0, loading: false, error: '' }) // <--- NUEVO ESTADO
 // --- reCAPTCHA ---
 const recaptchaContainer = ref(null)
 const recaptchaWidgetId = ref(null)
@@ -204,7 +206,19 @@ onUnmounted(() => {
 // --- WATCHERS ---
 
 // Resetear pago si cambia el método de entrega (por si desaparece el efectivo)
-watch(metodoEntrega, () => {
+watch(metodoEntrega, (newVal) => {
+  // 1. LÓGICA DE ENVÍO
+  // Si es recogida O agendar, el costo es 0 (No calculamos nada)
+  if (newVal === 'recogida' || newVal === 'agendar') {
+    cartStore.setShippingCost(0)
+    deliveryInfo.value.error = ''
+  }
+  // Solo calculamos si es "Delivery Inmediato"
+  else if (newVal === 'envio') {
+    updateDeliveryCost(markerLatLng.value[0], markerLatLng.value[1])
+  }
+
+  // 2. LÓGICA DE MÉTODOS DE PAGO (se mantiene igual)
   const isSelectedAvailable = availablePaymentMethods.value.some(
     (method) => method.id === pago.value.metodo_pago_id
   );
@@ -247,9 +261,24 @@ watch(() => pago.value.metodo_pago_id, async (newId) => {
   }
 });
 
+watch(agendarTipo, () => {
+  // Si estamos en modo agendar, aseguramos que el envío sea 0
+  if (metodoEntrega.value === 'agendar') {
+    cartStore.setShippingCost(0)
+  }
+})
+
 // Mapa
-function onMarkerDragEnd(event) {
-  markerLatLng.value = [event.target.getLatLng().lat, event.target.getLatLng().lng]
+// src/views/CheckoutView.vue
+
+async function onMarkerDragEnd(event) {
+  const { lat, lng } = event.target.getLatLng()
+  markerLatLng.value = [lat, lng]
+
+  // SOLO calculamos si es "Delivery (Inmediato)"
+  if (metodoEntrega.value === 'envio') {
+    await updateDeliveryCost(lat, lng)
+  }
 }
 
 async function getUserLocation() {
@@ -269,11 +298,45 @@ async function getUserLocation() {
     const lng = position.coords.longitude;
     markerLatLng.value = [lat, lng];
     mapCenter.value = [lat, lng];
+    if (metodoEntrega.value === 'envio') {
+      await updateDeliveryCost(lat, lng)
+    }
   } catch (error) {
     console.log(error);
     alert("No se pudo obtener tu ubicación.");
   } finally {
     isLocating.value = false;
+  }
+}
+
+// NUEVA FUNCIÓN AUXILIAR
+async function updateDeliveryCost(lat, lng) {
+  deliveryInfo.value.loading = true
+  deliveryInfo.value.error = ''
+
+  // Hacemos el cálculo (esto tarda unos segundos)
+  const result = await calculateShippingFee(lat, lng)
+
+  // --- CORRECCIÓN DEL BUG (Race Condition) ---
+  // Verificamos: ¿El usuario sigue queriendo "Delivery Inmediato"?
+  // Si se cambió a "Recogida" o "Agendar" mientras calculábamos, ABORTAMOS.
+  if (metodoEntrega.value !== 'envio') {
+    deliveryInfo.value.loading = false
+    return; // Salimos de la función sin tocar el precio
+  }
+  // ------------------------------------------
+
+  deliveryInfo.value.loading = false
+
+  if (result.success) {
+    cartStore.setShippingCost(result.price)
+    deliveryInfo.value.distance = result.distance
+    // toast.success(`Distancia: ${result.distance}km. Envío: $${result.price}`)
+  } else {
+    cartStore.setShippingCost(0)
+    deliveryInfo.value.distance = result.distance || 0
+    deliveryInfo.value.error = result.message
+    toast.warning(result.message)
   }
 }
 
@@ -300,6 +363,14 @@ function handleRemoveCoupon() {
 async function procesarPedido() {
   // 1. Validaciones básicas
   if (cartStore.items.length === 0) return toast.error('Tu carrito está vacío.')
+
+  if (!cliente.value.nombre || !cliente.value.nombre.trim()) {
+    return toast.error('Por favor, ingresa tu Nombre y Apellido.');
+  }
+  if (!cliente.value.telefono || !cliente.value.telefono.trim()) {
+    return toast.error('Por favor, ingresa tu Número de Teléfono.');
+  }
+
   if (!pago.value.metodo_pago_id) return toast.error('Selecciona un método de pago.');
 
   if (showPaymentReference.value) {
@@ -315,9 +386,6 @@ async function procesarPedido() {
   else if (metodoEntrega.value === 'envio') {
     if (!direccion.value.trim()) return toast.error('Ingresa un punto de referencia para el delivery.');
   }
-
-  console.log(cliente);
-
   // 3. reCAPTCHA
   const recaptchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId.value);
   if (!recaptchaResponse) {
@@ -375,7 +443,8 @@ async function procesarPedido() {
       // Nuevos campos
       es_agendado: finalEsAgendado,
       fecha_agendada: finalFechaAgendada,
-      hora_agendada: finalHoraAgendada
+      hora_agendada: finalHoraAgendada,
+      costo_envio: cartStore.shippingCost || 0
     }
 
     // Insertar Pedido
@@ -479,6 +548,29 @@ async function procesarPedido() {
                   name="OpenStreetMap"></l-tile-layer>
                 <l-marker :lat-lng="markerLatLng" :draggable="true" @moveend="onMarkerDragEnd"></l-marker>
               </l-map>
+
+            </div>
+            <div v-if="metodoEntrega === 'envio' || (metodoEntrega === 'agendar' && agendarTipo === 'envio')"
+              class="mt-2">
+
+              <p v-if="deliveryInfo.loading" class="text-sm text-blue-600 animate-pulse">
+                Calculando ruta y tarifa de envío...
+              </p>
+
+              <div v-else-if="!deliveryInfo.error && cartStore.shippingCost > 0"
+                class="p-3 bg-pink-100 border font-semibold text-brand-fucsia-dark border-brand-fucsia rounded-md flex justify-between items-center">
+                <p class="flex">
+                  <MapPinIcon class="h-6 w-6" />{{ deliveryInfo.distance }} km
+                </p>
+                <span>
+                  Costo Envío: ${{ cartStore.shippingCost.toFixed(2) }}
+                </span>
+              </div>
+
+              <div v-if="deliveryInfo.error"
+                class="p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+                ⚠️ {{ deliveryInfo.error }}
+              </div>
             </div>
             <textarea v-model="direccion" placeholder="Punto de referencia (ej: portón rojo, frente a farmacia)"
               rows="2" required
@@ -627,7 +719,7 @@ async function procesarPedido() {
                 <input v-model="couponCode" type="text" placeholder="Código"
                   class="flex-grow p-2 border rounded-md text-sm">
                 <CustomButton @click.prevent="handleApplyCoupon" :disabled="isLoading">{{ isLoading ? '...' : 'Aplicar'
-                  }}</CustomButton>
+                }}</CustomButton>
               </div>
             </Transition>
           </div>
@@ -637,13 +729,20 @@ async function procesarPedido() {
               <p class="text-gray-600">Subtotal</p>
               <p class="font-semibold">${{ cartStore.subtotal.toFixed(2) }}</p>
             </div>
+
+            <div v-if="cartStore.shippingCost > 0" class="flex justify-between items-center text-gray-600">
+              <p>Envío ({{ deliveryInfo.distance }}km)</p>
+              <p class="font-semibold">+ ${{ cartStore.shippingCost.toFixed(2) }}</p>
+            </div>
+
             <Transition name="fade">
               <div v-if="cartStore.appliedCoupon" class="flex justify-between items-center text-green-600">
                 <p>Descuento <button @click="handleRemoveCoupon" class="text-red-500 text-xs">(x)</button></p>
                 <p class="font-semibold">-${{ cartStore.discountAmount.toFixed(2) }}</p>
               </div>
             </Transition>
-            <div class="flex justify-between items-center font-bold text-lg">
+
+            <div class="flex justify-between items-center font-bold text-lg border-t pt-2">
               <p>Total a Pagar</p>
               <p class="text-brand-fucsia text-xl">${{ cartStore.finalTotal.toFixed(2) }}</p>
             </div>
@@ -664,6 +763,10 @@ async function procesarPedido() {
 <style scoped>
 .animate-fadeIn {
   animation: fadeIn 0.4s ease-in-out;
+}
+
+.leaflet-container.leaflet-touch.leaflet-fade-anim.leaflet-grab.leaflet-touch-drag.leaflet-touch-zoom {
+  z-index: 39;
 }
 
 @keyframes fadeIn {

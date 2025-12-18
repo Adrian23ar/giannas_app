@@ -140,6 +140,18 @@ function formatVariants(item) {
           <span class="font-semibold text-gray-800">${{ subtotal.toFixed(2) }}</span>
         </div>
 
+        <div v-if="details.costo_envio > 0" class="flex justify-between text-sm text-gray-600">
+          <span>Delivery:</span>
+          <span class="font-semibold text-gray-800">+${{ Number(details.costo_envio).toFixed(2) }}</span>
+        </div>
+
+        <div v-if="(subtotal + (details.costo_envio || 0)) > details.total"
+          class="flex justify-between text-sm text-green-600">
+          <span>Descuento:</span>
+          <span class="font-semibold">-${{ ((subtotal + (details.costo_envio || 0)) - details.total).toFixed(2)
+            }}</span>
+        </div>
+
         <div class="flex justify-between font-bold text-xl border-t pt-3 items-end">
           <span class="text-gray-800 text-sm pb-1">Total (USD):</span>
           <span class="text-brand-fucsia">${{ details.total.toFixed(2) }}</span>

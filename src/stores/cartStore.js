@@ -11,6 +11,7 @@ export const useCartStore = defineStore('cart', () => {
   const recentlyAddedId = ref(null)
   const appliedCoupon = ref(null)
   const discountAmount = ref(0)
+  const shippingCost = ref(0)
 
   // --- GETTERS ---
   const totalItems = computed(() => {
@@ -24,7 +25,8 @@ export const useCartStore = defineStore('cart', () => {
   })
 
   const finalTotal = computed(() => {
-    const total = subtotal.value - discountAmount.value
+    // 2. MODIFICADO: Sumamos el envío al total final
+    const total = subtotal.value - discountAmount.value + shippingCost.value
     return total < 0 ? 0 : total
   })
 
@@ -107,6 +109,11 @@ export const useCartStore = defineStore('cart', () => {
     }
     items.value = []
     removeCoupon()
+    setShippingCost(0) // Limpiamos envío también
+  }
+
+  function setShippingCost(amount) {
+    shippingCost.value = amount
   }
 
   function recalculateDiscount() {
@@ -148,6 +155,7 @@ export const useCartStore = defineStore('cart', () => {
     recentlyAddedId,
     appliedCoupon,
     discountAmount,
+    shippingCost,
     totalItems,
     subtotal,
     finalTotal,
@@ -158,5 +166,6 @@ export const useCartStore = defineStore('cart', () => {
     clearCart,
     applyCoupon,
     removeCoupon,
+    setShippingCost
   }
 })
