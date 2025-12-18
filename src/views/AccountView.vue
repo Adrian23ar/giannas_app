@@ -2,28 +2,25 @@
 import { ref, onMounted, computed } from 'vue';
 import { useUserStore } from '@/stores/userStore';
 import { getOrdersByUserId } from '@/services/orderService';
-import { getSpecialOrdersByUserId } from '@/services/specialOrderService'; // Importamos el nuevo servicio
 import { formatDisplayDate } from '@/utils/formatters.js';
 
 const userStore = useUserStore();
-const allOrders = ref([]); // Un único array para todos los pedidos
+const allOrders = ref([]);
 const cargando = ref(true);
 
 onMounted(async () => {
   if (userStore.isLoggedIn) {
     try {
       // Pedimos ambos tipos de pedidos en paralelo
-      const [normalOrdersData, specialOrdersData] = await Promise.all([
+      const [normalOrdersData] = await Promise.all([
         getOrdersByUserId(userStore.user.id),
-        getSpecialOrdersByUserId(userStore.user.id)
       ]);
 
       // Mapeamos los datos para que tengan una estructura consistente
       const normalOrders = normalOrdersData.map(o => ({ ...o, type: 'normal' }));
-      const specialOrders = specialOrdersData.map(o => ({ ...o, type: 'special' }));
 
       // Combinamos y ordenamos por fecha
-      allOrders.value = [...normalOrders, ...specialOrders]
+      allOrders.value = [...normalOrders]
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     } catch (error) {
@@ -77,20 +74,6 @@ onMounted(async () => {
                   {{ order.estado.replace(/_/g, ' ') }}
                 </p>
               </div>
-
-              <div v-if="order.type === 'special'" class="w-full">
-                <div class="flex justify-between items-center">
-                  <p class="font-bold">Solicitud #SO-{{ String(order.id).padStart(5, '0') }}</p>
-                  <p class="font-bold text-lg">{{ order.presupuesto_final ?
-                    `$${order.presupuesto_final.toFixed(2)}` : 'Cotizando' }}</p>
-                </div>
-                <p class="text-sm text-gray-500">Fecha: {{ formatDisplayDate(order.created_at) }}</p>
-                <p class="text-sm capitalize font-semibold"
-                  :class="{ 'text-green-600': order.estado === 'finalizado', 'text-yellow-600': order.estado === 'verificando_pago' }">
-                  {{ order.estado.replace(/_/g, ' ') }}
-                </p>
-              </div>
-
             </div>
           </div>
           <div v-else class="text-center py-8 text-gray-500">
