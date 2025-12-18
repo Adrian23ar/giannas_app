@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router' // 1. Importar useRoute
 import { supabase } from '../supabase'
 import { useToast } from 'vue-toastification'
 import {
@@ -12,6 +13,9 @@ import {
   ClockIcon
 } from '@heroicons/vue/24/outline'
 import CustomButton from '@/components/CustomButton.vue'
+
+const route = useRoute()     // 2. Instanciar route
+const router = useRouter()   // 3. Instanciar router (para limpiar la URL luego)
 
 // --- ESTADOS ---
 const pedidos = ref([])
@@ -56,6 +60,23 @@ async function fetchPedidos() {
 
     if (error) throw error
     pedidos.value = data
+
+    // --- 4. LÓGICA DE APERTURA AUTOMÁTICA ---
+    // Verificamos si hay un ID en la URL
+    if (route.query.abrir) {
+      const idParaAbrir = parseInt(route.query.abrir)
+
+      // Buscamos el pedido en la lista que acabamos de cargar
+      const pedidoEncontrado = pedidos.value.find(p => p.id === idParaAbrir)
+
+      if (pedidoEncontrado) {
+        // Abrimos el modal con ese pedido
+        verDetalle(pedidoEncontrado)
+
+        // (Opcional) Limpiamos la URL para que si recarga no se vuelva a abrir
+        router.replace({ query: null })
+      }
+    }
   } catch (error) {
     toast.error('Error al cargar pedidos')
     console.error(error)
@@ -419,7 +440,7 @@ function formatVariantes(detalle) {
                   class="text-xs lg:text-sm py-2 bg-yellow-500 hover:bg-yellow-600">Verificando</CustomButton>
                 <CustomButton @click="cambiarEstado('en_preparacion')"
                   :disabled="pedidoSeleccionado.estado === 'en_preparacion'"
-                  class="text-xs lg:text-sm py-2 bg-blue-500 hover:bg-blue-600">En Preparación</CustomButton>
+                  class="text-xs lg:text-sm py-2 hover:bg-brand-fucsia-dark">En Preparación</CustomButton>
                 <CustomButton @click="cambiarEstado('listo')" :disabled="pedidoSeleccionado.estado === 'listo'"
                   class="text-xs lg:text-sm py-2 bg-purple-500 hover:bg-purple-600">Listo</CustomButton>
                 <CustomButton @click="cambiarEstado('completado')"
@@ -427,7 +448,7 @@ function formatVariantes(detalle) {
                   class="text-xs lg:text-sm py-2 bg-green-500 hover:bg-green-600">Completado</CustomButton>
               </div>
               <button @click="cambiarEstado('cancelado')"
-                class="w-full mt-3 text-xs text-red-500 hover:text-red-700 font-bold border border-red-200 rounded py-2 hover:bg-red-50 transition-colors">
+                class="w-full mt-3 text-xs text-red-500 hover:text-red-700 font-bold border border-red-200 rounded py-2 hover:bg-red-100 transition-colors">
                 Cancelar Pedido
               </button>
             </div>

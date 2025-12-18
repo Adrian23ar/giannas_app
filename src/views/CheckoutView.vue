@@ -290,6 +290,7 @@ async function handleApplyCoupon() {
     isLoading.value = false
   }
 }
+
 function handleRemoveCoupon() {
   cartStore.removeCoupon()
   toast.info('Cupón eliminado.')
@@ -314,6 +315,8 @@ async function procesarPedido() {
   else if (metodoEntrega.value === 'envio') {
     if (!direccion.value.trim()) return toast.error('Ingresa un punto de referencia para el delivery.');
   }
+
+  console.log(cliente);
 
   // 3. reCAPTCHA
   const recaptchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId.value);

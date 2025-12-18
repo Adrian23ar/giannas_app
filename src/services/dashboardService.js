@@ -9,33 +9,22 @@ export const getDashboardData = async (days = 7) => {
 
   // 1. Obtener los ingresos de AMBAS fuentes en paralelo para máxima eficiencia.
   const [
-    { data: pedidos, error: pedidosError },
-    { data: pedidosEspeciales, error: especialesError }
-  ] = await Promise.all([
+    { data: pedidos, error: pedidosError }] = await Promise.all([
     // Fuente 1: Pedidos normales de la tienda
     supabase
       .from('pedidos')
       .select('total, created_at')
       .eq('estado', 'completado')
       .gte('created_at', startDate),
-
-    // Fuente 2: Pedidos especiales finalizados
-    supabase
-      .from('solicitudes_especiales')
-      .select('presupuesto_final, created_at')
-      .eq('estado', 'finalizado')
-      .gte('created_at', startDate)
   ])
 
   if (pedidosError) throw new Error('Error al obtener los pedidos de la tienda.')
-  if (especialesError) throw new Error('Error al obtener los pedidos especiales.')
 
   // 2. Calcular las métricas clave
   const revenueTienda = pedidos.reduce((sum, order) => sum + order.total, 0)
-  const revenueEspecial = pedidosEspeciales.reduce((sum, order) => sum + (order.presupuesto_final || 0), 0)
 
   // El ingreso total ahora es la suma de ambas fuentes
-  const totalRevenue = revenueTienda + revenueEspecial
+  const totalRevenue = revenueTienda
 
   // Las otras métricas se siguen basando solo en los pedidos de la tienda online
   const totalOrders = pedidos.length
@@ -53,15 +42,6 @@ export const getDashboardData = async (days = 7) => {
       salesByDay[date] = 0
     }
     salesByDay[date] += order.total
-  })
-
-  // Sumamos los ingresos de los pedidos especiales al mismo objeto
-  pedidosEspeciales.forEach(order => {
-    const date = new Date(order.created_at).toLocaleDateString('es-VE', { timeZone: 'UTC' })
-    if (!salesByDay[date]) {
-      salesByDay[date] = 0
-    }
-    salesByDay[date] += order.presupuesto_final
   })
 
   // ----- FIN DEL CAMBIO -----

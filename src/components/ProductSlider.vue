@@ -31,7 +31,7 @@ function onShowDetails(product) {
 </script>
 
 <template>
-  <div class="mb-12">
+  <div>
     <p class="text-3xl font-bold text-brand-morado mb-4">{{ section.nombre }}</p>
     <Swiper :modules="[Navigation]" :slides-per-view="1.5" :space-between="20" :navigation="true" :breakpoints="{
       640: { slidesPerView: 2.5 },

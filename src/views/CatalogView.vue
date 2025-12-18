@@ -161,7 +161,7 @@ onMounted(fetchInitialData)
 <template>
   <div class="pb-4 px-4 sm:px-6 lg:px-8">
     <WelcomeModal />
-    <section class="mb-12">
+    <section class="mb-10">
       <picture>
         <source media="(max-width: 680px)" srcset="/welcome.webp">
 
@@ -172,7 +172,7 @@ onMounted(fetchInitialData)
         <img src="/welcome-1536w.webp" alt="Bienvenido a Gianna's Cookies" width="1872" height="480"
           fetchpriority="high" class="w-full md:h-auto rounded-lg shadow-lg object-cover">
       </picture>
-      <p class="text-xs text-center mt-4 text-gray-600 italic">Ciudad Ojeda - Estado Zulia</p>
+
     </section>
 
     <div v-if="loading.initial" class="text-center py-12">
@@ -180,8 +180,11 @@ onMounted(fetchInitialData)
     </div>
 
     <div v-else>
-
-      <div v-if="sections.length > 0" class="space-y-16 mb-16 min-h-[300px]">
+      <div class="mb-6">
+        <p class="text-base text-center text-gray-600 italic">Ciudad Ojeda - Estado Zulia</p>
+        <p class="text-base text-center text-gray-600 font-bold">Horneamos tus galletas al momento</p>
+      </div>
+      <div v-if="sections.length > 0" class="my-16 min-h-[250px]">
         <ProductSlider v-for="section in sections" :key="section.id" :section="section"
           @show-details="handleShowDetails" @add-to-cart="handleAddToCartFromSlider"
           :recently-added-id="recentlyAddedInSliderId" />
@@ -190,7 +193,7 @@ onMounted(fetchInitialData)
       <div>
         <div class="text-center md:text-left">
           <h1 class="text-3xl sm:text-4xl font-bold text-brand-morado mb-2">Nuestro Dulce Catálogo</h1>
-          <p class="text-gray-600 mb-8">Encuentra tus galletas, brownies y postres favoritos.</p>
+          <p class="text-gray-600 mb-6">Encuentra tus galletas, brownies y postres favoritos.</p>
         </div>
 
         <ProductFilters :categories="categories" :initial-filters="filters"
