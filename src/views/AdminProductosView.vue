@@ -1,11 +1,13 @@
 <script setup>
 // src/views/AdminProductosView.vue
-import { ref, onMounted } from 'vue' // <-- Añadimos computed
+import { ref, onMounted } from 'vue'
 import { getAllProductsWithCategory, createProduct, updateProduct, toggleProductStatus, calculateProductStats } from '@/services/productService'
 import { supabase } from '../supabase'
 
-// Importaciones de componentes e íconos...
-import StatCard from '@/components/StatCard.vue' // <-- Nuevo
+// 1. IMPORTAR COMPRESOR
+import imageCompression from 'browser-image-compression';
+
+import StatCard from '@/components/StatCard.vue'
 import CustomButton from '@/components/CustomButton.vue'
 import EmptyState from '@/components/EmptyState.vue';
 import ProductListItem from '@/components/ProductListItem.vue'
@@ -33,25 +35,16 @@ const nuevoProducto = ref({ nombre: '', descripcion: '', precio: 0, stock: 0, ca
 const variantesConfig = ref([])
 const archivoImagen = ref(null)
 
-// 2. NUEVAS FUNCIONES PARA MANEJAR LAS VARIANTES
+// ... (Tus funciones de variantes: agregarGrupoVariante, eliminarGrupoVariante, agregarOpcion, eliminarOpcion se quedan igual) ...
 
-// Agrega un nuevo grupo vacío (ej: "Sabores")
 function agregarGrupoVariante() {
   variantesConfig.value.push({
-    titulo: '',
-    min: 0,
-    max: 1,
-    opciones: [],
-    nuevaOpcionTemp: '' // Campo temporal para el input de escribir opción
+    titulo: '', min: 0, max: 1, opciones: [], nuevaOpcionTemp: ''
   })
 }
-
-// Elimina un grupo completo
 function eliminarGrupoVariante(index) {
   variantesConfig.value.splice(index, 1)
 }
-
-// Agrega una opción a un grupo específico (ej: "Chocolate" al grupo "Sabores")
 function agregarOpcion(grupoIndex) {
   const grupo = variantesConfig.value[grupoIndex]
   if (grupo.nuevaOpcionTemp && grupo.nuevaOpcionTemp.trim() !== '') {
@@ -59,8 +52,6 @@ function agregarOpcion(grupoIndex) {
     grupo.nuevaOpcionTemp = ''
   }
 }
-
-// Elimina una opción específica de un grupo
 function eliminarOpcion(grupoIndex, opIndex) {
   variantesConfig.value[grupoIndex].opciones.splice(opIndex, 1)
 }
@@ -81,8 +72,38 @@ async function obtenerDatosIniciales() {
   }
 }
 
-function manejarSeleccionArchivo(event) {
-  archivoImagen.value = event.target.files[0]
+// 2. FUNCIÓN DE SELECCIÓN DE ARCHIVO MODIFICADA
+async function manejarSeleccionArchivo(event) {
+  const file = event.target.files[0]
+  if (!file) return
+
+  // Validar
+  if (!file.type.startsWith('image/')) {
+    toast.error('Por favor sube un archivo de imagen válido')
+    return
+  }
+
+  try {
+    // COMPRESIÓN
+    const options = {
+      maxSizeMB: 0.3,          // Meta: Máximo 300KB
+      maxWidthOrHeight: 1024,  // Redimensionar a máximo 1024px
+      useWebWorker: true,
+      fileType: 'image/webp'   // Formato ligero
+    }
+
+    console.log(`Original: ${(file.size / 1024).toFixed(0)} KB`)
+    const compressedFile = await imageCompression(file, options);
+    console.log(`Comprimido: ${(compressedFile.size / 1024).toFixed(0)} KB`)
+
+    // Guardamos el archivo ya comprimido
+    archivoImagen.value = compressedFile
+    toast.success(`Imagen optimizada (${(compressedFile.size / 1024).toFixed(0)} KB)`)
+
+  } catch (error) {
+    console.error('Error al comprimir imagen:', error)
+    toast.error('Error al procesar la imagen')
+  }
 }
 
 function resetearFormulario() {
@@ -91,9 +112,7 @@ function resetearFormulario() {
   if (document.getElementById('file-input')) {
     document.getElementById('file-input').value = ''
   }
-
   variantesConfig.value = []
-
   modoEdicion.value = false
   productoAEditar.value = null
   formAbierto.value = false
@@ -101,19 +120,18 @@ function resetearFormulario() {
 
 async function guardarProducto() {
   try {
-    // Preparamos los datos de variantes: Quitamos el campo temporal 'nuevaOpcionTemp' antes de guardar
     const variantesParaGuardar = variantesConfig.value.map(({ nuevaOpcionTemp, ...resto }) => resto)
 
-    // Fusionamos con los datos del producto
     const datosProducto = {
       ...nuevoProducto.value,
-      configuracion_variantes: variantesParaGuardar // <-- Aquí guardamos el JSON
+      configuracion_variantes: variantesParaGuardar
     }
 
+    // Aquí 'archivoImagen.value' ya tiene la versión comprimida gracias a manejarSeleccionArchivo
     if (modoEdicion.value) {
       const dataActualizado = await updateProduct(
         productoAEditar.value.id,
-        datosProducto, // Usamos el objeto con variantes
+        datosProducto,
         archivoImagen.value,
         productoAEditar.value.foto_url
       )
@@ -157,12 +175,10 @@ function iniciarEdicion(producto) {
     categoria_id: producto.categoria_id,
   }
 
-  // NUEVO: Cargamos la configuración de variantes si existe
-  // Usamos JSON.parse/stringify para hacer una copia profunda y no editar por referencia
   if (producto.configuracion_variantes) {
     variantesConfig.value = JSON.parse(JSON.stringify(producto.configuracion_variantes)).map(grupo => ({
       ...grupo,
-      nuevaOpcionTemp: '' // Añadimos el campo temporal para la UI
+      nuevaOpcionTemp: ''
     }))
   } else {
     variantesConfig.value = []
