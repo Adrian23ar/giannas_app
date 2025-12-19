@@ -43,7 +43,7 @@ export const signUp = async (userData) => {
 export const sendPasswordResetEmail = async (email) => {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     // IMPORTANTE: Esta es la URL a la que será redirigido el usuario desde su correo
-    redirectTo: 'https://giannascookies.netlify.app//actualizar-clave',
+    redirectTo: 'https://giannascookies.netlify.app/actualizar-clave',
   })
   if (error) throw error
 }
