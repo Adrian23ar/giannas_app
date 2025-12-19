@@ -48,8 +48,18 @@ export const getOrderDetails = async (orderId) => {
     .from('pedidos')
     .select(`
       *,
-      detalles_pedido ( cantidad, precio_unitario, productos (nombre) ),
-      pagos ( *, metodos_pago ( nombre, tipo ) )
+      detalles_pedido (
+        cantidad,
+        precio_unitario,
+        variantes_elegidas,
+        productos ( nombre )
+      ),
+      pagos (
+        nro_referencia,
+        fecha,
+        monto,
+        metodos_pago ( nombre, tipo )
+      )
     `)
     .eq('id', orderId)
     .single()
@@ -88,15 +98,16 @@ export const updateOrderStatus = async (orderId, newStatus) => {
 export const findOrderById = async (orderId) => {
   if (!orderId) throw new Error("Se requiere un ID de pedido.");
 
+  // Ahora traemos TODO lo necesario para mostrar el detalle completo
   const { data, error } = await supabase
     .from('pedidos')
     .select(`
-      id,
-      created_at,
-      estado,
-      total,
-      detalles_pedido ( cantidad, precio_unitario, productos (nombre) ),
-      pagos ( nro_referencia, metodos_pago ( nombre ) )
+      id, created_at, estado, total, total_bs,
+      nombre_cliente, telefono_cliente,
+      metodo_entrega, direccion_envio, costo_envio,
+      es_agendado, fecha_agendada, hora_agendada,
+      detalles_pedido ( cantidad, precio_unitario, variantes_elegidas, productos (nombre) ),
+      pagos ( nro_referencia, fecha, metodos_pago ( nombre, tipo ) )
     `)
     .eq('id', orderId)
     .single();
