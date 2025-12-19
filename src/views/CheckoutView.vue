@@ -359,6 +359,67 @@ function handleRemoveCoupon() {
   toast.info('Cupón eliminado.')
 }
 
+const whatsappZelleLink = computed(() => {
+  // A. Construimos el encabezado del mensaje
+  let text = "Hola! Quisiera realizar el pago de mi pedido con *Zelle*.\n\n";
+
+  // B. Listamos los productos
+  text += "*Resumen del Pedido:*\n";
+  cartStore.items.forEach(item => {
+    text += `- ${item.nombre} (x${item.quantity})`;
+
+    // Si tiene variantes
+    if (item.variants && Object.keys(item.variants).length > 0) {
+      // Helper simple para mostrar variantes en texto plano
+      const variantValues = Object.values(item.variants).flat().join(', ');
+      text += ` [${variantValues}]`;
+    }
+    text += ` - $${(item.precio * item.quantity).toFixed(2)}\n`;
+  });
+
+  text += "\n--------------------------------\n";
+
+  // C. Agregamos los totales financieros
+  text += `*Subtotal:* $${cartStore.subtotal.toFixed(2)}\n`;
+
+  if (cartStore.discountAmount > 0) {
+    text += `*Descuento:* -$${cartStore.discountAmount.toFixed(2)}\n`;
+  }
+
+  // --- D. Información de Entrega (CORREGIDO) ---
+  // Aquí usamos 'metodoEntrega' en vez de 'deliveryMethod'
+
+  if (metodoEntrega.value === 'envio') {
+    text += `*Envío (Inmediato):* $${cartStore.shippingCost.toFixed(2)}\n`;
+    text += `*Dirección:* ${direccion.value || 'Pendiente'}\n`;
+  }
+  else if (metodoEntrega.value === 'agendar') {
+    text += `*Pedido Agendado*\n`;
+    text += `Fecha: ${agendarFecha.value || 'Pendiente'}\n`;
+    text += `Hora: ${agendarHora.value || 'Pendiente'}\n`;
+
+    if (agendarTipo.value === 'envio') {
+       text += `*Modo:* Delivery (Dirección a coordinar)\n`;
+    } else {
+       text += `*Modo:* Retiro Personalmente\n`;
+    }
+  }
+  else {
+    text += `*Retiro en Tienda* (Pick-up Inmediato)\n`;
+  }
+
+  text += "--------------------------------\n";
+  text += `*TOTAL A PAGAR: $${cartStore.finalTotal.toFixed(2)}*\n\n`;
+
+  // --- E. Datos del Cliente (CORREGIDO) ---
+  // Aquí usamos 'cliente' en vez de 'formData'
+  text += `*Cliente:* ${cliente.value.nombre || 'Pendiente'}\n`;
+  if(cliente.value.telefono) text += `*Tel:* ${cliente.value.telefono}\n`;
+
+  // F. Codificamos todo para URL y retornamos el link completo
+  return `https://wa.me/584122741450?text=${encodeURIComponent(text)}`;
+});
+
 // --- PROCESAR PEDIDO (El Corazón) ---
 async function procesarPedido() {
   // 1. Validaciones básicas
@@ -655,7 +716,7 @@ async function procesarPedido() {
           </div>
 
           <div class="text-center text-sm text-gray-600 my-4 p-3 bg-blue-50 rounded-lg">
-            <p>Para pagos con <strong>Zelle</strong>, por favor contáctanos vía <a href="https://wa.me/+584122741450"
+            <p>Para pagos con <strong>Zelle</strong>, por favor contáctanos vía <a :href=whatsappZelleLink
                 class="text-brand-fucsia font-bold hover:underline" target="_blank">WhatsApp</a> para coordinar.</p>
           </div>
 
