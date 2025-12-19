@@ -112,10 +112,8 @@ function orderViaWhatsApp() {
             <p class="font-bold text-xl text-brand-fucsia">${{ cartStore.finalTotal.toFixed(2) }}</p>
           </div>
 
-          <p class="text-xs text-gray-500 mt-4 text-center">Costos de envío consultar al Whatsapp.</p>
-
           <RouterLink to="/checkout"
-            class="block text-center w-full mt-4 bg-brand-fucsia text-white font-bold py-3 rounded-md hover:bg-opacity-90 shadow-lg shadow-brand-fucsia/20 transition-all">
+            class="block text-center w-full mt-6 bg-brand-fucsia text-white font-bold py-3 rounded-md hover:bg-opacity-90 shadow-lg shadow-brand-fucsia/20 transition-all">
             Proceder al Pago
           </RouterLink>
 

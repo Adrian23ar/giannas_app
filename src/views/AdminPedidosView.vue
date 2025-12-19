@@ -175,6 +175,26 @@ function formatVariantes(detalle) {
     return `${opciones.join(', ')}`
   })
 }
+
+function orderViaWhatsApp() {
+  const pedido = pedidos.value.find(p => p.id === pedidoSeleccionado.value.id);
+  if (!pedido || !pedido.telefono_cliente) return;
+
+  // 1. Limpiamos el string para que solo queden números
+  let rawNumber = pedido.telefono_cliente.replace(/\D/g, '');
+
+  // 2. Quitamos el '0' inicial si lo tiene (ej: 0424 -> 424)
+  if (rawNumber.startsWith('0')) {
+    rawNumber = rawNumber.substring(1);
+  }
+
+  // 3. Verificamos si ya tiene el prefijo 58.
+  // Si no lo tiene, se lo agregamos.
+  const finalNumber = rawNumber.startsWith('58') ? rawNumber : `58${rawNumber}`;
+
+  const whatsappUrl = `https://wa.me/${finalNumber}`;
+  window.open(whatsappUrl, '_blank');
+}
 </script>
 
 <template>
@@ -334,8 +354,10 @@ function formatVariantes(detalle) {
               <div class="space-y-2 text-sm">
                 <p><span class="text-gray-500">Nombre:</span> <span class="font-medium ml-2">{{
                   pedidoSeleccionado.nombre_cliente }}</span></p>
-                <p><span class="text-gray-500">Teléfono:</span> <span class="font-medium ml-2">{{
-                  pedidoSeleccionado.telefono_cliente }}</span></p>
+                <span class="text-gray-500">Telefono: </span><button @click="orderViaWhatsApp"
+                  class="font-semibold text-brand-fucsia hover:text-brand-morado transition-colors">
+                  {{ pedidoSeleccionado.telefono_cliente }}
+                </button>
               </div>
             </div>
 
@@ -359,7 +381,8 @@ function formatVariantes(detalle) {
                 </div>
 
                 <div v-if="pedidoSeleccionado.metodo_entrega === 'envio'">
-                  <p class="text-gray-500 mb-1">Dirección: <span class="font-medium bg-gray-50 rounded text-xs"> {{ pedidoSeleccionado.direccion_envio }}</span></p>
+                  <p class="text-gray-500 mb-1">Dirección: <span class="font-medium bg-gray-50 rounded text-xs"> {{
+                    pedidoSeleccionado.direccion_envio }}</span></p>
 
                   <a v-if="pedidoSeleccionado.latitud && pedidoSeleccionado.longitud"
                     :href="`https://www.google.com/maps?q=${pedidoSeleccionado.latitud},${pedidoSeleccionado.longitud}`"
@@ -437,7 +460,7 @@ function formatVariantes(detalle) {
                   <span>Descuento Aplicado</span>
                   <span>-${{((pedidoSeleccionado.detalles_pedido.reduce((acc, item) => acc + (item.cantidad *
                     item.precio_unitario), 0) + (pedidoSeleccionado.costo_envio || 0)) -
-                    pedidoSeleccionado.total).toFixed(2) }}</span>
+                    pedidoSeleccionado.total).toFixed(2)}}</span>
                 </div>
                 <div class="flex justify-between items-center border-t pt-2 mt-2 font-bold text-lg">
                   <span>Total</span>
