@@ -418,55 +418,59 @@ function orderViaWhatsApp() {
           </div>
 
           <div class="flex flex-col h-full">
-            <div class="bg-gray-50 rounded-xl p-4 border flex-grow overflow-y-auto max-h-96 mb-6">
-              <h3 class="font-bold text-gray-700 mb-4 sticky top-0 bg-gray-50 pb-2 border-b text-sm uppercase">Productos
+            <div class="bg-gray-50 rounded-xl border flex-grow overflow-y-auto max-h-96 mb-6">
+              <h3 class="font-bold text-gray-700 mb-4 p-4 sticky top-0 bg-gray-50 pb-2 border-b text-sm uppercase">Productos
               </h3>
-              <div class="space-y-3 border-b pb-4">
-                <div v-for="item in pedidoSeleccionado.detalles_pedido" :key="item.id"
-                  class="flex gap-3 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
-                  <img :src="item.productos.foto_url" class="w-12 h-12 rounded object-cover bg-gray-200 shrink-0">
-                  <div class="flex-grow min-w-0">
-                    <div class="flex justify-between items-start">
-                      <p class="font-bold text-gray-800 text-sm lg:text-base  truncate">{{ item.productos.nombre }}</p>
-                      <p class="font-bold text-brand-morado text-sm lg:text-base">${{ (item.cantidad *
-                        item.precio_unitario).toFixed(2) }}</p>
-                    </div>
-                    <p class="text-xs lg:text-sm text-gray-500">{{ item.cantidad }} x ${{ item.precio_unitario }}</p>
-
-                    <div v-if="formatVariantes(item)" class="mt-1 flex flex-wrap gap-1">
-                      <div v-if="Array.isArray(formatVariantes(item))">
-                        <span v-for="(v, i) in formatVariantes(item)" :key="i"
-                          class="text-[10px] lg:text-xs text-gray-600 bg-pink-50 px-1.5 py-0.5 rounded border border-pink-100">
-                          {{ v }}
-                        </span>
+              <div class="p-4">
+                <div class="space-y-3 border-b pb-4">
+                  <div v-for="item in pedidoSeleccionado.detalles_pedido" :key="item.id"
+                    class="flex gap-3 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+                    <img :src="item.productos.foto_url" class="w-12 h-12 rounded object-cover bg-gray-200 shrink-0">
+                    <div class="flex-grow min-w-0">
+                      <div class="flex justify-between items-start">
+                        <p class="font-bold text-gray-800 text-sm lg:text-base  truncate">{{ item.productos.nombre }}
+                        </p>
+                        <p class="font-bold text-brand-morado text-sm lg:text-base">${{ (item.cantidad *
+                          item.precio_unitario).toFixed(2) }}</p>
                       </div>
-                      <span v-else class="text-[10px] text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">{{
-                        formatVariantes(item) }}</span>
-                    </div>
+                      <p class="text-xs lg:text-sm text-gray-500">{{ item.cantidad }} x ${{ item.precio_unitario }}</p>
 
+                      <div v-if="formatVariantes(item)" class="mt-1 flex flex-wrap gap-1">
+                        <div v-if="Array.isArray(formatVariantes(item))">
+                          <span v-for="(v, i) in formatVariantes(item)" :key="i"
+                            class="text-[10px] lg:text-xs text-gray-600 bg-pink-50 px-1.5 py-0.5 rounded border border-pink-100">
+                            {{ v }}
+                          </span>
+                        </div>
+                        <span v-else class="text-[10px] text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">{{
+                          formatVariantes(item) }}</span>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-4">
+                  <div v-if="pedidoSeleccionado.costo_envio > 0"
+                    class="flex justify-between items-center text-sm text-gray-600">
+                    <span>Costo de Envío</span>
+                    <span>+${{ Number(pedidoSeleccionado.costo_envio).toFixed(2) }}</span>
+                  </div>
+                  <div
+                    v-if="(pedidoSeleccionado.detalles_pedido.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0) + (pedidoSeleccionado.costo_envio || 0)) > pedidoSeleccionado.total"
+                    class="flex justify-between items-center text-sm text-green-600 font-medium">
+                    <span>Descuento Aplicado</span>
+                    <span>-${{((pedidoSeleccionado.detalles_pedido.reduce((acc, item) => acc + (item.cantidad *
+                      item.precio_unitario), 0) + (pedidoSeleccionado.costo_envio || 0)) -
+                      pedidoSeleccionado.total).toFixed(2)}}</span>
+                  </div>
+                  <div class="flex justify-between items-center border-t pt-2 mt-2 font-bold text-lg">
+                    <span>Total</span>
+                    <span class="text-brand-fucsia">${{ pedidoSeleccionado.total.toFixed(2) }}</span>
                   </div>
                 </div>
               </div>
 
-              <div class="pt-4">
-                <div v-if="pedidoSeleccionado.costo_envio > 0"
-                  class="flex justify-between items-center text-sm text-gray-600">
-                  <span>Costo de Envío</span>
-                  <span>+${{ Number(pedidoSeleccionado.costo_envio).toFixed(2) }}</span>
-                </div>
-                <div
-                  v-if="(pedidoSeleccionado.detalles_pedido.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0) + (pedidoSeleccionado.costo_envio || 0)) > pedidoSeleccionado.total"
-                  class="flex justify-between items-center text-sm text-green-600 font-medium">
-                  <span>Descuento Aplicado</span>
-                  <span>-${{((pedidoSeleccionado.detalles_pedido.reduce((acc, item) => acc + (item.cantidad *
-                    item.precio_unitario), 0) + (pedidoSeleccionado.costo_envio || 0)) -
-                    pedidoSeleccionado.total).toFixed(2)}}</span>
-                </div>
-                <div class="flex justify-between items-center border-t pt-2 mt-2 font-bold text-lg">
-                  <span>Total</span>
-                  <span class="text-brand-fucsia">${{ pedidoSeleccionado.total.toFixed(2) }}</span>
-                </div>
-              </div>
 
             </div>
 
