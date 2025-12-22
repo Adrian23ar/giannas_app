@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { supabase } from '@/supabase';
-import OrderReceipt from '@/components/OrderReceipt.vue';
+import OrderReceipt from '@/components/client/OrderReceipt.vue';
 
 // Importamos las librerías para descargar
 import html2canvas from 'html2canvas';

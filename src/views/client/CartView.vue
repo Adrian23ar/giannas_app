@@ -2,7 +2,7 @@
 import { useCartStore } from '@/stores/cartStore'
 import { RouterLink } from 'vue-router'
 import { TrashIcon, ShoppingCartIcon } from '@heroicons/vue/24/outline'
-import EmptyState from '@/components/EmptyState.vue'
+import EmptyState from '@/components/shared/EmptyState.vue'
 
 const cartStore = useCartStore()
 

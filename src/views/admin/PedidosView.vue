@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router' // 1. Importar useRoute
-import { supabase } from '../supabase'
+import { supabase } from '../../supabase'
 import { useToast } from 'vue-toastification'
 import {
   EyeIcon,
@@ -12,7 +12,7 @@ import {
   MapPinIcon,
   ClockIcon
 } from '@heroicons/vue/24/outline'
-import CustomButton from '@/components/CustomButton.vue'
+import CustomButton from '@/components/shared/CustomButton.vue'
 
 const route = useRoute()     // 2. Instanciar route
 const router = useRouter()   // 3. Instanciar router (para limpiar la URL luego)

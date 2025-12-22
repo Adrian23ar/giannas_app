@@ -3,14 +3,14 @@
 import { ref, onMounted, computed } from 'vue' // <-- Se añade 'computed' aquí
 import * as sectionService from '@/services/sectionService'
 import { useToast } from 'vue-toastification'
-import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import SkeletonLoader from '@/components/shared/SkeletonLoader.vue'
 
 // 1. FALTA IMPORTAR draggable
 import draggable from 'vuedraggable'
 
 // Importamos los componentes y los íconos necesarios
-import ConfirmModal from '@/components/ConfirmModal.vue'
-import ToggleSwitch from '@/components/ToggleSwitch.vue'
+import ConfirmModal from '@/components/shared/ConfirmModal.vue'
+import ToggleSwitch from '@/components/shared/ToggleSwitch.vue'
 import { PlusIcon, PencilSquareIcon, TrashIcon, CheckIcon, XMarkIcon, Bars3Icon } from '@heroicons/vue/24/outline'
 
 

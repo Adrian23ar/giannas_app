@@ -3,10 +3,10 @@
 import { ref, onMounted, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import { paymentMethodService } from '@/services/paymentMethodService';
-import CustomButton from '@/components/CustomButton.vue';
-import ConfirmModal from '@/components/ConfirmModal.vue';
-import EmptyState from '@/components/EmptyState.vue';
-import SkeletonLoader from '@/components/SkeletonLoader.vue';
+import CustomButton from '@/components/shared/CustomButton.vue';
+import ConfirmModal from '@/components/shared/ConfirmModal.vue';
+import EmptyState from '@/components/shared/EmptyState.vue';
+import SkeletonLoader from '@/components/shared/SkeletonLoader.vue';
 import { ChevronDownIcon, PlusIcon, XCircleIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline';
 
 const toast = useToast();

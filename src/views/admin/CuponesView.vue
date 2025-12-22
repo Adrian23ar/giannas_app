@@ -4,11 +4,11 @@ import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
 import { getCoupons, createCoupon, deleteCoupon, updateCouponStatus, updateCoupon } from '@/services/couponService'
 import { formatDisplayDate } from '@/utils/formatters.js'
-import CustomButton from '@/components/CustomButton.vue'
-import ConfirmModal from '@/components/ConfirmModal.vue'
-import EditCouponModal from '@/components/EditCouponModal.vue' // <-- Nuevo
+import CustomButton from '@/components/shared/CustomButton.vue'
+import ConfirmModal from '@/components/shared/ConfirmModal.vue'
+import EditCouponModal from '@/components/admin/EditCouponModal.vue' // <-- Nuevo
 import { PlusIcon, TrashIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
-import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import SkeletonLoader from '@/components/shared/SkeletonLoader.vue'
 
 const toast = useToast()
 const cupones = ref([])

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import CustomButton from './CustomButton.vue'
+import CustomButton from '../shared/CustomButton.vue'
 import { CheckIcon, ShoppingBagIcon, CreditCardIcon, TicketIcon } from '@heroicons/vue/24/outline'
 
 const isOpen = ref(false)

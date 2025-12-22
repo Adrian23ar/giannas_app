@@ -12,7 +12,7 @@ import {
   CalendarDaysIcon,
   ClockIcon
 } from '@heroicons/vue/24/outline'
-import CustomButton from '@/components/CustomButton.vue'
+import CustomButton from '@/components/shared/CustomButton.vue'
 
 const userStore = useUserStore()
 const toast = useToast()

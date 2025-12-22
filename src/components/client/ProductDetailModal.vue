@@ -2,7 +2,7 @@
 // src/components/ProductDetailModal.vue
 import { ref, watch, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { CheckCircleIcon, ExclamationCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline';
-import CustomButton from './CustomButton.vue';
+import CustomButton from '../shared/CustomButton.vue';
 
 // 1. ESTADO DE CANTIDAD
 const quantity = ref(1);

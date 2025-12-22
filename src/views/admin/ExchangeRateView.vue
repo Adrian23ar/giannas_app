@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useToast } from 'vue-toastification';
 // Importamos la nueva función 'checkApiStatus'
 import { getRatesForPeriod, upsertRate, checkApiStatus } from '@/services/exchangeRateService';
-import CustomButton from '@/components/CustomButton.vue';
+import CustomButton from '@/components/shared/CustomButton.vue';
 import { formatDisplayDate } from '@/utils/formatters.js';
 // Importamos un ícono para el nuevo botón
 import { WifiIcon } from '@heroicons/vue/24/outline';

@@ -3,13 +3,13 @@
 import { ref, onMounted } from 'vue'
 import { getCategories, createCategory, updateCategory, deleteCategory } from '@/services/categoryService'
 import { useToast } from 'vue-toastification' // <-- 1. IMPORTACIÓN AÑADIDA
-import ConfirmModal from '@/components/ConfirmModal.vue'
-import EditCategoryModal from '@/components/EditCategoryModal.vue' // <-- NUEVO
-import EmptyState from '@/components/EmptyState.vue'
-import CustomButton from '@/components/CustomButton.vue'
-import CategoryListItem from '@/components/CategoryListItem.vue'
+import ConfirmModal from '@/components/shared/ConfirmModal.vue'
+import EditCategoryModal from '@/components/admin/EditCategoryModal.vue' // <-- NUEVO
+import EmptyState from '@/components/shared/EmptyState.vue'
+import CustomButton from '@/components/shared/CustomButton.vue'
+import CategoryListItem from '@/components/admin/CategoryListItem.vue'
 import { PlusIcon, TagIcon } from '@heroicons/vue/24/outline'
-import SkeletonLoader from '@/components/SkeletonLoader.vue';
+import SkeletonLoader from '@/components/shared/SkeletonLoader.vue';
 
 const toast = useToast()
 const categorias = ref([])

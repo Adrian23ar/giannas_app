@@ -6,7 +6,7 @@ import { useUserStore } from '@/stores/userStore'
 // Los Layouts se pueden mantener con importación estática, ya que son la base
 import AdminLayout from '../layouts/AdminLayout.vue'
 import ClientLayout from '../layouts/ClientLayout.vue'
-import CatalogView from '../views/CatalogView.vue'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -15,16 +15,56 @@ const router = createRouter({
       path: '/',
       component: ClientLayout,
       children: [
-        { path: '', name: 'catalog', component: CatalogView},
-        { path: 'cart', name: 'cart', component: () => import('../views/CartView.vue') },
-        { path: 'checkout', name: 'checkout', component: () => import('../views/CheckoutView.vue') },
-        { path: 'confirmation/:orderId', name: 'confirmation', component: () => import('../views/OrderConfirmationView.vue') },
-        { path: 'seguimiento', name: 'tracking', component: () => import('../views/TrackingView.vue') },
-        { path: 'ingresar', name: 'client-login', component: () => import('../views/ClientLoginView.vue') },
-        { path: 'registro', name: 'client-register', component: () => import('../views/ClientRegisterView.vue') },
-        { path: 'olvide-clave', name: 'forgot-password', component: () => import('../views/ForgotPasswordView.vue') },
-        { path: 'actualizar-clave', name: 'update-password', component: () => import('../views/UpdatePasswordView.vue') },
-        { path: 'mi-cuenta', name: 'account', component: () => import('../views/AccountView.vue') },
+        { 
+          path: '', 
+          name: 'catalog', 
+          component: () => import('../views/client/CatalogView.vue')
+        },
+        { 
+          path: 'cart', 
+          name: 'cart', 
+          component: () => import('../views/client/CartView.vue') 
+        },
+        { 
+          path: 'checkout', 
+          name: 'checkout', 
+          component: () => import('../views/client/CheckoutView.vue') 
+        },
+        { 
+          path: 'confirmation/:orderId', 
+          name: 'confirmation', 
+          component: () => import('../views/client/OrderConfirmationView.vue') 
+        },
+        { 
+          path: 'seguimiento', 
+          name: 'tracking', 
+          component: () => import('../views/client/TrackingView.vue') 
+        },
+        { 
+          path: 'ingresar', 
+          name: 'client-login', 
+          component: () => import('../views/client/LoginView.vue') 
+        },
+        { 
+          path: 'registro', 
+          name: 'client-register', 
+          component: () => import('../views/client/RegisterView.vue') 
+        },
+        { 
+          path: 'olvide-clave', 
+          name: 'forgot-password', 
+          component: () => import('../views/client/ForgotPasswordView.vue') 
+        },
+        { 
+          path: 'actualizar-clave', 
+          name: 'update-password', 
+          component: () => import('../views/client/UpdatePasswordView.vue') 
+        },
+        { 
+          path: 'mi-cuenta', 
+          name: 'account', 
+          component: () => import('../views/client/AccountView.vue') 
+        },
       ],
     },
 
@@ -32,22 +72,58 @@ const router = createRouter({
     {
       path: '/admin/login',
       name: 'admin-login',
-      component: () => import('../views/LoginView.vue'),
+      component: () => import('../views/admin/LoginView.vue'),
     },
     {
       path: '/admin',
       component: AdminLayout,
       meta: { requiresAuth: true },
       children: [
-        { path: '', name: 'admin-dashboard', component: () => import('../views/AdminDashboardView.vue') },
-        { path: 'productos', name: 'Productos', component: () => import('../views/AdminProductosView.vue') },
-        { path: 'categorias', name: 'Categorias', component: () => import('../views/AdminCategoriasView.vue') },
-        { path: 'pedidos', name: 'Pedidos', component: () => import('../views/AdminPedidosView.vue') },
-        { path: 'cupones', name: 'Cupones', component: () => import('../views/AdminCuponesView.vue') },
-        { path: 'metodos-pago', name: 'Metodos de Pago', component: () => import('../views/AdminPaymentsView.vue') },
-        { path: 'tasa-de-cambio', name: 'Tasa de Cambio', component: () => import('../views/AdminExchangeRateView.vue') },
-        { path: 'secciones', name: 'Secciones', component: () => import('@/views/AdminSectionsView.vue') },
-        { path: 'configuracion', name: 'Configuracion', component: () => import('@/views/AdminConfigView.vue') }
+        { 
+          path: '', 
+          name: 'admin-dashboard', 
+          component: () => import('../views/admin/DashboardView.vue') 
+        },
+        { 
+          path: 'productos', 
+          name: 'Productos', 
+          component: () => import('../views/admin/ProductosView.vue') 
+        },
+        { 
+          path: 'categorias', 
+          name: 'Categorias', 
+          component: () => import('../views/admin/CategoriasView.vue') 
+        },
+        { 
+          path: 'pedidos', 
+          name: 'Pedidos', 
+          component: () => import('../views/admin/PedidosView.vue') 
+        },
+        { 
+          path: 'cupones', 
+          name: 'Cupones', 
+          component: () => import('../views/admin/CuponesView.vue') 
+        },
+        { 
+          path: 'metodos-pago', 
+          name: 'Metodos de Pago', 
+          component: () => import('../views/admin/PaymentsView.vue') 
+        },
+        { 
+          path: 'tasa-de-cambio', 
+          name: 'Tasa de Cambio', 
+          component: () => import('../views/admin/ExchangeRateView.vue') 
+        },
+        { 
+          path: 'secciones', 
+          name: 'Secciones', 
+          component: () => import('../views/admin/SectionsView.vue') 
+        },
+        { 
+          path: 'configuracion', 
+          name: 'Configuracion', 
+          component: () => import('../views/admin/ConfigView.vue') 
+        }
       ],
     },
   ],

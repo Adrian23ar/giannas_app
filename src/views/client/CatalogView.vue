@@ -8,19 +8,19 @@ import { getFilteredProducts } from '@/services/productService'
 import { getActiveSectionsWithProducts } from '@/services/sectionService'
 import { getCategories } from '@/services/categoryService'
 
-import SkeletonLoader from '@/components/SkeletonLoader.vue' // Importa el esqueleto
+import SkeletonLoader from '@/components/shared/SkeletonLoader.vue' // Importa el esqueleto
 
 // Importamos todos los componentes que usaremos en la vista
-import ProductCard from '@/components/ProductCard.vue'
+import ProductCard from '@/components/client/ProductCard.vue'
 const ProductSlider = defineAsyncComponent({
-  loader: () => import('@/components/ProductSlider.vue'),
+  loader: () => import('@/components/client/ProductSlider.vue'),
   loadingComponent: SkeletonLoader, // Muestra esto mientras carga
   delay: 0, // Muestralo inmediatamente
   timeout: 3000
 })
-const ProductFilters = defineAsyncComponent(() => import('@/components/ProductFilters.vue'))
-const ProductDetailModal = defineAsyncComponent(() => import('@/components/ProductDetailModal.vue'))
-const WelcomeModal = defineAsyncComponent(() => import('@/components/WelcomeModal.vue'))
+const ProductFilters = defineAsyncComponent(() => import('@/components/client/ProductFilters.vue'))
+const ProductDetailModal = defineAsyncComponent(() => import('@/components/client/ProductDetailModal.vue'))
+const WelcomeModal = defineAsyncComponent(() => import('@/components/client/WelcomeModal.vue'))
 
 // --- ESTADO PRINCIPAL DE LA VISTA ---
 const cartStore = useCartStore()

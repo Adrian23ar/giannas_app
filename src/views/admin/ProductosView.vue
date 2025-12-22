@@ -2,17 +2,17 @@
 // src/views/AdminProductosView.vue
 import { ref, onMounted } from 'vue'
 import { getAllProductsWithCategory, createProduct, updateProduct, toggleProductStatus, calculateProductStats } from '@/services/productService'
-import { supabase } from '../supabase'
+import { supabase } from '../../supabase'
 
 // 1. IMPORTAR COMPRESOR
 import imageCompression from 'browser-image-compression';
 
-import StatCard from '@/components/StatCard.vue'
-import CustomButton from '@/components/CustomButton.vue'
-import EmptyState from '@/components/EmptyState.vue';
-import ProductListItem from '@/components/ProductListItem.vue'
+import StatCard from '@/components/admin/StatCard.vue'
+import CustomButton from '@/components/shared/CustomButton.vue'
+import EmptyState from '@/components/shared/EmptyState.vue';
+import ProductListItem from '@/components/admin/ProductListItem.vue'
 import { PlusIcon, TrashIcon, PencilSquareIcon, XCircleIcon, CubeIcon, ChevronDownIcon, BanknotesIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
-import SkeletonLoader from '@/components/SkeletonLoader.vue';
+import SkeletonLoader from '@/components/shared/SkeletonLoader.vue';
 import { useToast } from 'vue-toastification'
 
 const toast = useToast()

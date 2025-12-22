@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import CustomButton from './CustomButton.vue'
+import CustomButton from '../shared/CustomButton.vue'
 
 const props = defineProps({
   show: Boolean,

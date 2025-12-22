@@ -3,7 +3,7 @@
 import { ref } from 'vue'
 import { useToast } from 'vue-toastification'
 import { sendPasswordResetEmail } from '@/services/authService'
-import CustomButton from '@/components/CustomButton.vue'
+import CustomButton from '@/components/shared/CustomButton.vue'
 
 const toast = useToast()
 const email = ref('')

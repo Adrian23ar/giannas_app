@@ -3,7 +3,7 @@
 import { defineProps, defineEmits } from 'vue';
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import { Navigation } from 'swiper/modules';
-import ProductCard from '@/components/ProductCard.vue';
+import ProductCard from '@/components/client/ProductCard.vue';
 
 // Importa los estilos de Swiper
 import 'swiper/css';

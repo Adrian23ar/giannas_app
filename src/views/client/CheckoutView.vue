@@ -5,11 +5,11 @@ import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cartStore'
 import { useUserStore } from '@/stores/userStore'
 import { useToast } from 'vue-toastification'
-import { supabase } from '../supabase'
+import { supabase } from '../../supabase'
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet"
 import { MapPinIcon } from '@heroicons/vue/24/outline'
 
-import CustomButton from '@/components/CustomButton.vue'
+import CustomButton from '@/components/shared/CustomButton.vue'
 import { paymentMethodService } from '@/services/paymentMethodService'
 import { incrementCouponUsage } from '@/services/couponService'
 import { getLatestExchangeRate } from '@/services/exchangeRateService'

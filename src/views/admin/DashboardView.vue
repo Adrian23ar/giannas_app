@@ -2,9 +2,9 @@
 import { ref, onMounted } from 'vue'
 import { getDashboardData } from '@/services/dashboardService'
 import { useToast } from 'vue-toastification'
-import StatCard from '@/components/StatCard.vue'
-import SalesChart from '@/components/SalesChart.vue'
-import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import StatCard from '@/components/admin/StatCard.vue'
+import SalesChart from '@/components/admin/SalesChart.vue'
+import SkeletonLoader from '@/components/shared/SkeletonLoader.vue'
 import { BanknotesIcon, ShoppingCartIcon, PercentBadgeIcon } from '@heroicons/vue/24/outline'
 
 const toast = useToast()
