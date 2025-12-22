@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router' // <-- 1. Importar useRouter
 import { supabase } from '@/supabase'
-import * as notificationService from '@/services/notificationService'
+import * as notificationService from '@/services/admin/notificationService'
 import { BellIcon } from '@heroicons/vue/24/outline'
 import { formatDistanceToNow } from 'date-fns'
 import es from 'date-fns/locale/es'

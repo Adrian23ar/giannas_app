@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { findAnyOrder } from '@/services/orderService'
+import { findAnyOrder } from '@/services/orders/orderService'
 import { useToast } from 'vue-toastification'
 import {
   MagnifyingGlassIcon,

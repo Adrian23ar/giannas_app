@@ -1,7 +1,7 @@
 <script setup>
 // src/views/AdminSectionsView.vue
 import { ref, onMounted, computed } from 'vue' // <-- Se añade 'computed' aquí
-import * as sectionService from '@/services/sectionService'
+import * as sectionService from '@/services/admin/sectionService'
 import { useToast } from 'vue-toastification'
 import SkeletonLoader from '@/components/shared/SkeletonLoader.vue'
 

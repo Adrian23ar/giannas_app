@@ -3,7 +3,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { signUp } from '@/services/authService' // <-- Usamos el servicio
+import { signUp } from '@/services/auth/authService' // <-- Usamos el servicio
 import CustomButton from '@/components/shared/CustomButton.vue'
 import { loadRecaptcha } from '@/utils/recaptchaLoader'
 

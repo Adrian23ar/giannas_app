@@ -2,8 +2,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { useUserStore } from './userStore'
-import { validateCoupon } from '@/services/couponService'
-import { fetchCart, upsertCartItem, removeCartItem, clearUserCart } from '@/services/cartService'
+import { validateCoupon } from '@/services/payments/couponService'
+import { fetchCart, upsertCartItem, removeCartItem, clearUserCart } from '@/services/cart/cartService'
 
 export const useCartStore = defineStore('cart', () => {
   const userStore = useUserStore()

@@ -2,7 +2,7 @@
 // src/views/AdminPaymentsView.vue
 import { ref, onMounted, watch } from 'vue';
 import { useToast } from 'vue-toastification';
-import { paymentMethodService } from '@/services/paymentMethodService';
+import { paymentMethodService } from '@/services/payments/paymentMethodService';
 import CustomButton from '@/components/shared/CustomButton.vue';
 import ConfirmModal from '@/components/shared/ConfirmModal.vue';
 import EmptyState from '@/components/shared/EmptyState.vue';

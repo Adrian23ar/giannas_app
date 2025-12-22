@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import AdminNotificationBell from '@/components/admin/NotificationBell.vue';
-import { supabase } from '../supabase'
+import { supabase } from '@/supabase'
 import {
   ArrowLeftOnRectangleIcon,
   Bars3Icon,

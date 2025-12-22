@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { signIn } from '@/services/authService' // <-- Usamos el servicio
+import { signIn } from '@/services/auth/authService' // <-- Usamos el servicio
 import CustomButton from '@/components/shared/CustomButton.vue'
 
 const router = useRouter()

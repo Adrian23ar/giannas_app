@@ -1,5 +1,5 @@
 // src/services/paymentMethodService.js
-import { supabase } from '../supabase';
+import { supabase } from '@/supabase';
 
 /**
  * Obtiene todos los métodos de pago de la base de datos.

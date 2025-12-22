@@ -1,5 +1,5 @@
 // src/services/categoryService.js
-import { supabase } from '../supabase'
+import { supabase } from '@/supabase'
 
 /**
  * Obtiene todas las categorías ordenadas por nombre.

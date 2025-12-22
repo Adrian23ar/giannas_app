@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { updateUserPassword } from '@/services/authService'
+import { updateUserPassword } from '@/auth/services/authService'
 import CustomButton from '@/components/shared/CustomButton.vue'
 
 const router = useRouter()

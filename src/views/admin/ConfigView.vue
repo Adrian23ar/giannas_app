@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { configService } from '@/services/configService'
+import { configService } from '@/services/config/configService'
 import { useToast } from 'vue-toastification'
 import CustomButton from '@/components/shared/CustomButton.vue'
 import { TrashIcon, CalendarDaysIcon, ClockIcon } from '@heroicons/vue/24/outline'

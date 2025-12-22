@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getDashboardData } from '@/services/dashboardService'
+import { getDashboardData } from '@/services/admin/dashboardService'
 import { useToast } from 'vue-toastification'
 import StatCard from '@/components/admin/StatCard.vue'
 import SalesChart from '@/components/admin/SalesChart.vue'

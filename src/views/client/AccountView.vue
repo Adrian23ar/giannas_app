@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/userStore'
-import { getOrdersByUserId, getOrderDetails } from '@/services/orderService' // Importamos getOrderDetails
+import { getOrdersByUserId, getOrderDetails } from '@/services/orders/orderService' // Importamos getOrderDetails
 import { supabase } from '@/supabase'
 import { useToast } from 'vue-toastification'
 import {

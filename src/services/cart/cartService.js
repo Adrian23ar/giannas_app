@@ -1,5 +1,5 @@
 // src/services/cartService.js
-import { supabase } from '../supabase'
+import { supabase } from '@/supabase'
 
 /**
  * Obtiene el carrito de un usuario desde la base de datos.

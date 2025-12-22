@@ -1,5 +1,5 @@
 // src/services/authService.js
-import { supabase } from '../supabase'
+import { supabase } from '@/supabase'
 
 /**
  * Inicia sesión de un usuario.

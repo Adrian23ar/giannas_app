@@ -1,5 +1,5 @@
 // src/services/orderService.js
-import { supabase } from '../supabase'
+import { supabase } from '@/supabase'
 
 /**
  * Obtiene todos los pedidos, ordenados por fecha de creación.

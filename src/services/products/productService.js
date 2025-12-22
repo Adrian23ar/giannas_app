@@ -1,5 +1,5 @@
 // src/services/productService.js
-import { supabase } from '../supabase'
+import { supabase } from '@/supabase'
 
 
 // Esta función ahora será para el catálogo del cliente

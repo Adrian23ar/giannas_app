@@ -1,8 +1,8 @@
 <script setup>
 // src/views/AdminProductosView.vue
 import { ref, onMounted } from 'vue'
-import { getAllProductsWithCategory, createProduct, updateProduct, toggleProductStatus, calculateProductStats } from '@/services/productService'
-import { supabase } from '../../supabase'
+import { getAllProductsWithCategory, createProduct, updateProduct, toggleProductStatus, calculateProductStats } from '@/services/products/productService'
+import { supabase } from '@/supabase'
 
 // 1. IMPORTAR COMPRESOR
 import imageCompression from 'browser-image-compression';

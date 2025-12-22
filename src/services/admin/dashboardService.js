@@ -1,5 +1,5 @@
 // src/services/dashboardService.js
-import { supabase } from '../supabase'
+import { supabase } from '@/supabase'
 import { subDays } from 'date-fns'
 
 export const getDashboardData = async (days = 7) => {

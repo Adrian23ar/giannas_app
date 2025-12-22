@@ -1,7 +1,7 @@
 <script setup>
 // src/views/AdminCategoriasView.vue
 import { ref, onMounted } from 'vue'
-import { getCategories, createCategory, updateCategory, deleteCategory } from '@/services/categoryService'
+import { getCategories, createCategory, updateCategory, deleteCategory } from '@/services/products/categoryService'
 import { useToast } from 'vue-toastification' // <-- 1. IMPORTACIÓN AÑADIDA
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
 import EditCategoryModal from '@/components/admin/EditCategoryModal.vue' // <-- NUEVO

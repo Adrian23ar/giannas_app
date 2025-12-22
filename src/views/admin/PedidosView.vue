@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router' // 1. Importar useRoute
-import { supabase } from '../../supabase'
+import { supabase } from '@/supabase'
 import { useToast } from 'vue-toastification'
 import {
   EyeIcon,

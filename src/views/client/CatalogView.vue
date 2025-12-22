@@ -4,9 +4,9 @@ import { ref, onMounted, watch, defineAsyncComponent } from 'vue' // Usamos 'wat
 import { useCartStore } from '@/stores/cartStore'
 
 // Importamos todos los servicios que necesitamos
-import { getFilteredProducts } from '@/services/productService'
-import { getActiveSectionsWithProducts } from '@/services/sectionService'
-import { getCategories } from '@/services/categoryService'
+import { getFilteredProducts } from '@/services/products/productService'
+import { getActiveSectionsWithProducts } from '@/services/admin/sectionService'
+import { getCategories } from '@/services/products/categoryService'
 
 import SkeletonLoader from '@/components/shared/SkeletonLoader.vue' // Importa el esqueleto
 

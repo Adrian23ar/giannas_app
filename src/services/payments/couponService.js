@@ -1,5 +1,5 @@
 // src/services/couponService.js
-import { supabase } from '../supabase'
+import { supabase } from '@/supabase'
 
 /**
  * Obtiene todos los cupones.

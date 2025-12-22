@@ -2,7 +2,7 @@
 // src/views/ForgotPasswordView.vue
 import { ref } from 'vue'
 import { useToast } from 'vue-toastification'
-import { sendPasswordResetEmail } from '@/services/authService'
+import { sendPasswordResetEmail } from '@/services/auth/authService'
 import CustomButton from '@/components/shared/CustomButton.vue'
 
 const toast = useToast()

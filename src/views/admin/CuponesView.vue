@@ -2,7 +2,7 @@
 // src/views/AdminCuponesView.vue
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
-import { getCoupons, createCoupon, deleteCoupon, updateCouponStatus, updateCoupon } from '@/services/couponService'
+import { getCoupons, createCoupon, deleteCoupon, updateCouponStatus, updateCoupon } from '@/services/payments/couponService'
 import { formatDisplayDate } from '@/utils/formatters.js'
 import CustomButton from '@/components/shared/CustomButton.vue'
 import ConfirmModal from '@/components/shared/ConfirmModal.vue'
