@@ -57,7 +57,7 @@ Este proyecto está construido con un stack de tecnologías modernas, separando 
       * **Funciones Serverless**: Supabase Edge Functions (escritas en TypeScript/Deno) para tareas como:
           * Verificación de reCAPTCHA.
           * Obtención y almacenamiento de la tasa de cambio del dólar.
-          * Envío de correos electrónicos (próximamente).
+          * Envío de correos electrónicos para el administrador.
 
 -----
 
