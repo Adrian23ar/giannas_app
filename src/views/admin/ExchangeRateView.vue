@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useToast } from 'vue-toastification';
+import { supabase } from '@/supabase';
 // Importamos la nueva función 'checkApiStatus'
 import { getRatesForPeriod, upsertRate, checkApiStatus } from '@/services/config/exchangeRateService';
 import CustomButton from '@/components/shared/CustomButton.vue';
@@ -42,6 +43,51 @@ async function fetchRates() {
 }
 
 onMounted(fetchRates);
+
+// Función para buscar tasa automáticamente al cambiar fecha
+async function autoFetchRate(newDate) {
+  isCheckingApi.value = true;
+
+  // 1. Verificación en caché local (Base de Datos)
+  const { data: rateFromDB } = await supabase
+    .from('tasa_cambio')
+    .select('tasa')
+    .eq('fecha', newDate)
+    .maybeSingle();
+
+  if (rateFromDB) {
+    manualRate.value.rate = rateFromDB.tasa;
+    // Mensaje descriptivo para datos locales
+    toast.info(`Usando tasa guardada localmente: ${rateFromDB.tasa} Bs.`);
+    isCheckingApi.value = false;
+    return;
+  }
+
+  // 2. Si no está en caché, invocar la Edge Function
+  const result = await checkApiStatus(newDate);
+
+  if (result.success && result.rate) {
+    manualRate.value.rate = result.rate;
+
+    // Formateamos la fecha que viene de la API para el mensaje
+    // formatDisplayDate es tu utilidad en @/utils/formatters.js
+    const fechaTasa = formatDisplayDate(newDate);
+
+    toast.success(`Se obtuvo la tasa de ${result.rate} Bs. Fecha: ${fechaTasa}`);
+  } else {
+    manualRate.value.rate = null;
+    toast.warning(`No se encontró información externa para el día ${formatDisplayDate(newDate)}.`);
+  }
+
+  isCheckingApi.value = false;
+}
+
+// Escuchar cambios en la fecha del formulario
+watch(() => manualRate.value.date, (newVal) => {
+  if (newVal) {
+    autoFetchRate(newVal);
+  }
+});
 
 async function handleSaveRate() {
   if (!manualRate.value.date || !manualRate.value.rate) {

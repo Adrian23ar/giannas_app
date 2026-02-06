@@ -99,31 +99,32 @@ export const upsertRate = async (date, rate) => {
   return data;
 };
 
+
 /**
- * [ADMIN] Verifica el estado de la API externa de tasas de cambio.
- * @returns {Promise<object>} Un objeto con el resultado de la verificación.
+ * [ADMIN] Verifica el estado de la API externa a través de la Edge Function
+ * y opcionalmente busca una tasa para una fecha específica.
  */
-export const checkApiStatus = async () => {
+export const checkApiStatus = async (specificDate = null) => {
   try {
-    const response = await fetch('https://api.dolarvzla.com/public/exchange-rate/list');
-    if (!response.ok) {
-      throw new Error(`La API respondió con un estado: ${response.status}`);
-    }
-    const data = await response.json();
-    if (!data.rates || data.rates.length === 0) {
-      throw new Error('La API respondió pero no devolvió tasas.');
-    }
-    // Si todo va bien, devolvemos un objeto de éxito
+    // Usamos la Edge Function de Supabase como "proxy" para evitar CORS
+    const { data, error } = await supabase.functions.invoke('store-exchange-rate', {
+      body: {
+        date: specificDate || toYYYYMMDD_local(new Date()),
+        isCheck: true // Podemos pasar un flag si queremos solo verificar
+      },
+    });
+
+    if (error) throw error;
+
     return {
       success: true,
-      message: `API funcionando. Tasa más reciente: ${data.rates[0].usd} Bs.`,
+      rate: data.rate,
+      message: `Tasa encontrada: ${data.rate} Bs. (${data.source})`,
     };
   } catch (error) {
-    console.error('Error al verificar el estado de la API:', error.message);
-    // Si algo falla, devolvemos un objeto de error
     return {
       success: false,
-      message: `Error: ${error.message}`,
+      message: `No se pudo obtener la tasa para esa fecha.`,
     };
   }
 };

@@ -3,10 +3,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
-// Función para formatear una fecha a YYYY-MM-DD
-const toYYYYMMDD = (date: Date) => date.toISOString().split('T')[0]
-
 Deno.serve(async (req) => {
+  // Manejo de CORS para peticiones OPTIONS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -22,49 +20,71 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // 1. Usamos la nueva URL de la API
-    const apiUrl = 'https://api.dolarvzla.com/public/exchange-rate/list'
+    // 1. Nueva URL de la API de DolarFlash
+    const apiUrl = 'https://dolarflashve.eu/api/api/rates/paginated?page=1&limit=300'
 
-    // 2. Hacemos la llamada a la API (ya no necesita token)
+    // 2. Llamada a la API
     const response = await fetch(apiUrl)
     if (!response.ok) {
-      throw new Error('La API de DolarVzla no respondió correctamente.')
+      throw new Error('La API de DolarFlash no respondió correctamente.')
     }
 
-    const data = await response.json()
+    const jsonResponse = await response.json()
 
-    // La estructura ahora es un objeto con una propiedad 'rates'
-    if (!data || !Array.isArray(data.rates) || data.rates.length === 0) {
-      throw new Error('La respuesta de la API no tiene el formato esperado o está vacía.')
+    // En DolarFlash, los datos vienen en la propiedad 'data'
+    if (!jsonResponse || !Array.isArray(jsonResponse.data)) {
+      throw new Error('Formato de respuesta de API inválido.')
     }
 
-    // 3. Buscamos la tasa del día o la más reciente
-    let foundRate = null
-    // Primero, buscamos la tasa exacta para la fecha del cliente
-    const exactMatch = data.rates.find((r) => r.date === clientDate)
-    if (exactMatch && exactMatch.usd) {
-      foundRate = exactMatch
-    } else {
-      // Si no hay tasa para hoy (fin de semana/feriado), usamos la más reciente disponible
-      foundRate = data.rates[0]
+    // 3. Buscar la tasa específica filtrando solo por la fecha (YYYY-MM-DD)
+    const tasaEncontrada = jsonResponse.data.find((item: any) => {
+      // Extraemos solo los primeros 10 caracteres de la fecha de la API (YYYY-MM-DD)
+      const apiDateOnly = item.date.split('T')[0];
+
+      return (
+        apiDateOnly === clientDate &&
+        item.source === "BCV" &&
+        item.operation_type === "USD"
+      );
+    });
+
+    // Si no encuentra la fecha exacta, puedes decidir si devolver un error
+    // o la más reciente. Para el admin, es mejor devolver error si no hay data.
+    if (!tasaEncontrada) {
+      return new Response(JSON.stringify({
+        error: `No se encontró tasa del BCV para la fecha ${clientDate} en los registros externos.`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 404,
+      });
     }
 
-    if (!foundRate || !foundRate.usd) {
-      throw new Error('No se encontró una tasa de cambio válida en la respuesta de la API.')
-    }
+    // Convertimos el string "381.11" a número float
+    const rateValue = parseFloat(tasaEncontrada.rate)
 
-    const rateValue = parseFloat(foundRate.usd)
-
-    // 4. Guardamos la tasa en nuestra base de datos para usarla como caché
-    await supabaseClient
+    // 4. Guardar en tu tabla de Supabase para caché
+    const { error: upsertError } = await supabaseClient
       .from('tasa_cambio')
-      .upsert({ fecha: clientDate, tasa: rateValue }, { onConflict: 'fecha' })
+      .upsert(
+        { fecha: clientDate, tasa: rateValue },
+        { onConflict: 'fecha' }
+      )
 
-    // 5. Devolvemos la tasa encontrada al frontend
-    return new Response(JSON.stringify({ rate: rateValue }), {
+    if (upsertError) {
+      console.error("Error guardando en BD:", upsertError.message)
+    }
+
+    // 5. Respuesta al frontend
+    return new Response(JSON.stringify({
+      rate: rateValue,
+      source: tasaEncontrada.source,
+      last_update: tasaEncontrada.date,
+      date: tasaEncontrada.date
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
+
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
