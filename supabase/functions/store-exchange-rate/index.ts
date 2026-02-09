@@ -4,7 +4,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 
 Deno.serve(async (req) => {
-  // Manejo de CORS para peticiones OPTIONS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -20,10 +19,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // 1. Nueva URL de la API de DolarFlash
-    const apiUrl = 'https://dolarflashve.eu/api/api/rates/paginated?page=1&limit=300'
+    const apiUrl = 'https://dolarflashve.eu/api/api/rates/paginated?page=1&limit=100&source=BCV'
 
-    // 2. Llamada a la API
     const response = await fetch(apiUrl)
     if (!response.ok) {
       throw new Error('La API de DolarFlash no respondió correctamente.')
@@ -31,55 +28,48 @@ Deno.serve(async (req) => {
 
     const jsonResponse = await response.json()
 
-    // En DolarFlash, los datos vienen en la propiedad 'data'
     if (!jsonResponse || !Array.isArray(jsonResponse.data)) {
       throw new Error('Formato de respuesta de API inválido.')
     }
 
-    // 3. Buscar la tasa específica filtrando solo por la fecha (YYYY-MM-DD)
-    const tasaEncontrada = jsonResponse.data.find((item: any) => {
-      // Extraemos solo los primeros 10 caracteres de la fecha de la API (YYYY-MM-DD)
-      const apiDateOnly = item.date.split('T')[0];
+    // --- NUEVA LÓGICA DE BÚSQUEDA ---
 
-      return (
-        apiDateOnly === clientDate &&
-        item.source === "BCV" &&
-        item.operation_type === "USD"
-      );
+    // 1. Filtrar solo USD del BCV y ordenar por fecha descendente (por si acaso)
+    const registrosUsd = jsonResponse.data
+      .filter((item: any) => item.source === "BCV" && item.operation_type === "USD")
+      .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    // 2. Buscar la tasa de la fecha exacta O la más reciente que sea igual o menor a la fecha pedida
+    const tasaEncontrada = registrosUsd.find((item: any) => {
+      const apiDateOnly = item.date.split('T')[0];
+      return apiDateOnly <= clientDate; // Cambio clave: permite buscar hacia atrás
     });
 
-    // Si no encuentra la fecha exacta, puedes decidir si devolver un error
-    // o la más reciente. Para el admin, es mejor devolver error si no hay data.
     if (!tasaEncontrada) {
       return new Response(JSON.stringify({
-        error: `No se encontró tasa del BCV para la fecha ${clientDate} en los registros externos.`
+        error: `No se encontró tasa para la fecha ${clientDate} ni registros anteriores disponibles.`
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 404,
       });
     }
 
-    // Convertimos el string "381.11" a número float
     const rateValue = parseFloat(tasaEncontrada.rate)
 
-    // 4. Guardar en tu tabla de Supabase para caché
-    const { error: upsertError } = await supabaseClient
+    // 4. Guardar en caché (Usamos la fecha solicitada por el cliente para el ID)
+    await supabaseClient
       .from('tasa_cambio')
       .upsert(
         { fecha: clientDate, tasa: rateValue },
         { onConflict: 'fecha' }
       )
 
-    if (upsertError) {
-      console.error("Error guardando en BD:", upsertError.message)
-    }
-
-    // 5. Respuesta al frontend
+    // 5. Respuesta
     return new Response(JSON.stringify({
       rate: rateValue,
       source: tasaEncontrada.source,
-      last_update: tasaEncontrada.date,
-      date: tasaEncontrada.date
+      last_update: tasaEncontrada.date, // Fecha real del registro encontrado
+      requested_date: clientDate       // Fecha que pidió el cliente
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
